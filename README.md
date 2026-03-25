@@ -1,12 +1,5 @@
 # EvoDrive Lab
 
-EvoDrive Lab is a Docker-first Python project for training and visualizing AI driving agents on procedurally generated 2D tracks.
-
-It is built to be two things at the same time:
-
-- a public GitHub project people can run, watch, and learn from
-- a clean experimental base for future benchmark and research work
-
 ![Eight-car population replay](docs/media/population_demo.gif)
 
 ## What This Project Does
