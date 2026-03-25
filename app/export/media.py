@@ -237,7 +237,8 @@ def export_population_media(
     *,
     prefix: str | None = None,
     stride: int = 3,
-    max_frames: int = 84,
+    target_duration_seconds: float = 20.0,
+    fps: int = 10,
 ) -> list[tuple[str, str, dict[str, object]]]:
     live_file = Path(live_path)
     if not live_file.exists():
@@ -255,14 +256,17 @@ def export_population_media(
     if max_step == 0:
         return []
     base_step_values = list(range(1, max_step + 1, max(stride, 1)))
-    pause_frames = 5
-    core_frame_budget = max(max_frames - (pause_frames * 2), 12)
+    target_frame_budget = max(int(round(target_duration_seconds * fps)), 24)
+    pause_frames = max(int(round(fps * 1.2)), 6)
+    core_frame_budget = max(target_frame_budget - (pause_frames * 2), 12)
     if len(base_step_values) > core_frame_budget:
         sample_indices = np.linspace(0, len(base_step_values) - 1, num=core_frame_budget, dtype=int)
         base_step_values = [base_step_values[index] for index in sample_indices.tolist()]
     elif base_step_values[-1] != max_step:
         base_step_values.append(max_step)
     step_values = ([base_step_values[0]] * pause_frames) + base_step_values + ([base_step_values[-1]] * pause_frames)
+    if len(step_values) < target_frame_budget:
+        step_values.extend([step_values[-1]] * (target_frame_budget - len(step_values)))
 
     car_scale = float(payload.get("physics", {}).get("car_radius", 0.8))
 
@@ -337,7 +341,7 @@ def export_population_media(
         interval=95,
         blit=False,
     )
-    population_animation.save(gif_path, writer=animation.PillowWriter(fps=10))
+    population_animation.save(gif_path, writer=animation.PillowWriter(fps=fps))
     plt.close(figure)
 
     return [
