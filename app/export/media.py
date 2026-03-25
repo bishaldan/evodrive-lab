@@ -254,12 +254,15 @@ def export_population_media(
     max_step = max((len(car.get("frames", [])) for car in cars), default=0)
     if max_step == 0:
         return []
-    step_values = list(range(1, max_step + 1, max(stride, 1)))
-    if len(step_values) > max_frames:
-        sample_indices = np.linspace(0, len(step_values) - 1, num=max_frames, dtype=int)
-        step_values = [step_values[index] for index in sample_indices.tolist()]
-    elif step_values[-1] != max_step:
-        step_values.append(max_step)
+    base_step_values = list(range(1, max_step + 1, max(stride, 1)))
+    pause_frames = 5
+    core_frame_budget = max(max_frames - (pause_frames * 2), 12)
+    if len(base_step_values) > core_frame_budget:
+        sample_indices = np.linspace(0, len(base_step_values) - 1, num=core_frame_budget, dtype=int)
+        base_step_values = [base_step_values[index] for index in sample_indices.tolist()]
+    elif base_step_values[-1] != max_step:
+        base_step_values.append(max_step)
+    step_values = ([base_step_values[0]] * pause_frames) + base_step_values + ([base_step_values[-1]] * pause_frames)
 
     car_scale = float(payload.get("physics", {}).get("car_radius", 0.8))
 
@@ -269,16 +272,39 @@ def export_population_media(
 
     trajectory_lines = []
     car_patches = []
+    car_labels = []
     for car in cars:
         color = car.get("color", "#118ab2")
-        (line,) = axis.plot([], [], color=color, linewidth=1.8, alpha=0.75, zorder=4)
+        (line,) = axis.plot([], [], color=color, linewidth=2.1, alpha=0.85, zorder=4)
         patch = Polygon(_car_outline(car["frames"][0]["position"], float(car["frames"][0]["heading"]), car_scale), closed=True)
         patch.set_facecolor(color)
         patch.set_edgecolor("#23313f")
         patch.set_linewidth(1.1)
         axis.add_patch(patch)
+        first_position = np.asarray(car["frames"][0]["position"], dtype=float)
+        label = axis.text(
+            first_position[0],
+            first_position[1],
+            str(car.get("rank", len(car_labels) + 1)),
+            color="#ffffff",
+            fontsize=7.5,
+            fontweight="bold",
+            ha="center",
+            va="center",
+            zorder=6,
+            bbox={
+                "boxstyle": "circle,pad=0.28",
+                "facecolor": color,
+                "edgecolor": "#23313f",
+                "linewidth": 0.9,
+                "alpha": 0.96,
+            },
+        )
         trajectory_lines.append(line)
         car_patches.append(patch)
+        car_labels.append(label)
+
+    total_cars = len(cars)
 
     def update_population(frame_index: int):
         step = step_values[frame_index]
@@ -293,12 +319,16 @@ def export_population_media(
             body_color = "#d62828" if current.get("crashed") else car.get("color", "#118ab2")
             trajectory_lines[idx].set_color(body_color)
             car_patches[idx].set_facecolor(body_color)
-            car_patches[idx].set_xy(_car_outline(current["position"], float(current["heading"]), car_scale))
+            heading = float(current["heading"])
+            position = np.asarray(current["position"], dtype=float)
+            car_patches[idx].set_xy(_car_outline(current["position"], heading, car_scale))
+            label_offset = np.array([-math.sin(heading), math.cos(heading)], dtype=float) * car_scale * 0.45
+            car_labels[idx].set_position((position[0] + label_offset[0], position[1] + label_offset[1]))
         axis.set_title(
-            f"Population replay | Generation {payload.get('generation', 0)} | Step {step}",
+            f"{total_cars}-car population replay | Generation {payload.get('generation', 0)} | Step {step}",
             fontsize=12,
         )
-        return [*trajectory_lines, *car_patches]
+        return [*trajectory_lines, *car_patches, *car_labels]
 
     population_animation = animation.FuncAnimation(
         figure,

@@ -16,14 +16,14 @@ from app.simulator.environment import DrivingEnv
 
 
 LIVE_COLORS = [
-    "#00A8E8",
-    "#2A9D8F",
-    "#F4A261",
-    "#E9C46A",
-    "#8E7DBE",
-    "#EF476F",
-    "#118AB2",
-    "#06D6A0",
+    "#ff595e",
+    "#1982c4",
+    "#8ac926",
+    "#ffca3a",
+    "#6a4c93",
+    "#ff924c",
+    "#00bfb3",
+    "#c1121f",
 ]
 
 
