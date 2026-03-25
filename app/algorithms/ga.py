@@ -84,6 +84,10 @@ def _write_live_population_snapshot(
                 "centerline": env.track.centerline.round(4).tolist(),
                 "left_wall": env.track.left_wall.round(4).tolist(),
                 "right_wall": env.track.right_wall.round(4).tolist(),
+                "start_gate": env.track.start_gate.round(4).tolist(),
+                "finish_gate": env.track.finish_gate.round(4).tolist(),
+                "checkpoint_gates": env.track.checkpoint_gates.round(4).tolist(),
+                "track_profile": env.track.profile,
                 "physics": {
                     "sensor_range": env.physics.sensor_range,
                     "num_rays": env.physics.num_rays,
@@ -103,6 +107,7 @@ def _write_live_population_snapshot(
                 "completion": round(completion, 5),
                 "crashed": crashed,
                 "steps": steps,
+                "max_sector": max((int(frame.get("sector", 0)) for frame in env.trajectory), default=0),
                 "mean_reward": train_summary["mean_reward"],
                 "mean_completion": train_summary["mean_completion"],
             }
@@ -117,6 +122,7 @@ def _write_live_population_snapshot(
                 "crashed": crashed,
                 "steps": steps,
                 "color": LIVE_COLORS[(rank - 1) % len(LIVE_COLORS)],
+                "max_sector": max((int(frame.get("sector", 0)) for frame in env.trajectory), default=0),
                 "frames": env.trajectory,
             }
         )

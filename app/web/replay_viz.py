@@ -10,17 +10,33 @@ def _car_outline(position: list[float], heading: float, scale: float) -> tuple[l
     px, py = position
     forward = (math.cos(heading), math.sin(heading))
     left = (-math.sin(heading), math.cos(heading))
-    nose = (px + (forward[0] * scale * 1.6), py + (forward[1] * scale * 1.6))
+    nose = (px + (forward[0] * scale * 1.65), py + (forward[1] * scale * 1.65))
+    front_left = (
+        px + (forward[0] * scale * 0.65) + (left[0] * scale * 0.8),
+        py + (forward[1] * scale * 0.65) + (left[1] * scale * 0.8),
+    )
+    mid_left = (
+        px - (forward[0] * scale * 0.25) + (left[0] * scale * 0.88),
+        py - (forward[1] * scale * 0.25) + (left[1] * scale * 0.88),
+    )
     rear_left = (
-        px - (forward[0] * scale) + (left[0] * scale * 0.8),
-        py - (forward[1] * scale) + (left[1] * scale * 0.8),
+        px - (forward[0] * scale * 1.2) + (left[0] * scale * 0.56),
+        py - (forward[1] * scale * 1.2) + (left[1] * scale * 0.56),
     )
     rear_right = (
-        px - (forward[0] * scale) - (left[0] * scale * 0.8),
-        py - (forward[1] * scale) - (left[1] * scale * 0.8),
+        px - (forward[0] * scale * 1.2) - (left[0] * scale * 0.56),
+        py - (forward[1] * scale * 1.2) - (left[1] * scale * 0.56),
     )
-    xs = [nose[0], rear_left[0], rear_right[0], nose[0]]
-    ys = [nose[1], rear_left[1], rear_right[1], nose[1]]
+    mid_right = (
+        px - (forward[0] * scale * 0.25) - (left[0] * scale * 0.88),
+        py - (forward[1] * scale * 0.25) - (left[1] * scale * 0.88),
+    )
+    front_right = (
+        px + (forward[0] * scale * 0.65) - (left[0] * scale * 0.8),
+        py + (forward[1] * scale * 0.65) - (left[1] * scale * 0.8),
+    )
+    xs = [nose[0], front_left[0], mid_left[0], rear_left[0], rear_right[0], mid_right[0], front_right[0], nose[0]]
+    ys = [nose[1], front_left[1], mid_left[1], rear_left[1], rear_right[1], mid_right[1], front_right[1], nose[1]]
     return xs, ys
 
 
@@ -68,15 +84,63 @@ def _trajectory_until(car: dict[str, Any], step: int) -> tuple[list[float], list
     return [frame["position"][0] for frame in trajectory], [frame["position"][1] for frame in trajectory]
 
 
+def _road_surface(left_wall: list[list[float]], right_wall: list[list[float]]) -> tuple[list[float], list[float]]:
+    xs = [point[0] for point in left_wall] + [point[0] for point in reversed(right_wall)] + [left_wall[0][0]]
+    ys = [point[1] for point in left_wall] + [point[1] for point in reversed(right_wall)] + [left_wall[0][1]]
+    return xs, ys
+
+
+def _gate_trace(
+    gates: list[list[list[float]]] | list[list[float]] | None,
+    *,
+    color: str,
+    name: str,
+    width: int = 3,
+    dash: str | None = None,
+) -> go.Scatter | None:
+    if not gates:
+        return None
+    if len(gates) == 2 and isinstance(gates[0][0], (int, float)):
+        gates = [gates]  # type: ignore[list-item]
+    xs: list[float | None] = []
+    ys: list[float | None] = []
+    for gate in gates:  # type: ignore[assignment]
+        xs.extend([gate[0][0], gate[1][0], None])
+        ys.extend([gate[0][1], gate[1][1], None])
+    return go.Scatter(
+        x=xs,
+        y=ys,
+        mode="lines",
+        line={"color": color, "width": width, "dash": dash},
+        name=name,
+    )
+
+
 def build_replay_figure(payload: dict[str, Any], frame_stride: int = 6) -> go.Figure:
     left_wall = payload["left_wall"]
     right_wall = payload["right_wall"]
     centerline = payload.get("centerline", [])
+    start_gate = payload.get("start_gate")
+    finish_gate = payload.get("finish_gate")
+    checkpoint_gates = payload.get("checkpoint_gates", [])
+    track_profile = payload.get("track_profile", {})
     frames = payload["frames"][:: max(frame_stride, 1)]
     physics = payload.get("physics", {})
     car_scale = float(physics.get("car_radius", 0.8))
 
     figure = go.Figure()
+    road_xs, road_ys = _road_surface(left_wall, right_wall)
+    figure.add_trace(
+        go.Scatter(
+            x=road_xs,
+            y=road_ys,
+            mode="lines",
+            fill="toself",
+            fillcolor="rgba(90, 90, 90, 0.15)",
+            line={"color": "rgba(90, 90, 90, 0.15)", "width": 1},
+            name="Road",
+        )
+    )
     figure.add_trace(
         go.Scatter(
             x=[point[0] for point in left_wall],
@@ -105,12 +169,22 @@ def build_replay_figure(payload: dict[str, Any], frame_stride: int = 6) -> go.Fi
                 name="Centerline",
             )
         )
+    checkpoint_trace = _gate_trace(checkpoint_gates, color="#F4A261", name="Checkpoints", width=2, dash="dot")
+    if checkpoint_trace is not None:
+        figure.add_trace(checkpoint_trace)
+    start_trace = _gate_trace(start_gate, color="#2A9D8F", name="Start", width=4)
+    if start_trace is not None:
+        figure.add_trace(start_trace)
+    finish_trace = _gate_trace(finish_gate, color="#E63946", name="Finish", width=4, dash="dash")
+    if finish_trace is not None:
+        figure.add_trace(finish_trace)
 
     initial = frames[0]
     car_xs, car_ys = _car_outline(initial["position"], float(initial["heading"]), car_scale)
     sensor_xs, sensor_ys = _sensor_traces(initial, physics)
     trajectory_xs = [frame["position"][0] for frame in frames[:1]]
     trajectory_ys = [frame["position"][1] for frame in frames[:1]]
+    dynamic_trace_offset = len(figure.data)
 
     figure.add_trace(
         go.Scatter(
@@ -156,7 +230,7 @@ def build_replay_figure(payload: dict[str, Any], frame_stride: int = 6) -> go.Fi
                     go.Scatter(x=sensor_xs, y=sensor_ys),
                     go.Scatter(x=car_xs, y=car_ys),
                 ],
-                traces=[3, 4, 5],
+                traces=[dynamic_trace_offset, dynamic_trace_offset + 1, dynamic_trace_offset + 2],
             )
         )
 
@@ -166,7 +240,11 @@ def build_replay_figure(payload: dict[str, Any], frame_stride: int = 6) -> go.Fi
 
     figure.frames = animation_frames
     figure.update_layout(
-        title=f"Animated replay on track seed {payload['track_seed']}",
+        title=(
+            f"Replay on track seed {payload['track_seed']}"
+            f" | {track_profile.get('difficulty', 'Course')}"
+            f" | {track_profile.get('corner_count', 0)} corners"
+        ),
         template="plotly_white",
         height=680,
         xaxis={
@@ -239,6 +317,10 @@ def build_population_figure(payload: dict[str, Any], frame_stride: int = 4) -> g
     left_wall = payload["left_wall"]
     right_wall = payload["right_wall"]
     centerline = payload.get("centerline", [])
+    start_gate = payload.get("start_gate")
+    finish_gate = payload.get("finish_gate")
+    checkpoint_gates = payload.get("checkpoint_gates", [])
+    track_profile = payload.get("track_profile", {})
     cars = payload.get("cars", [])
     physics = payload.get("physics", {})
     if not cars:
@@ -253,6 +335,18 @@ def build_population_figure(payload: dict[str, Any], frame_stride: int = 4) -> g
     car_scale = float(physics.get("car_radius", 0.8))
 
     figure = go.Figure()
+    road_xs, road_ys = _road_surface(left_wall, right_wall)
+    figure.add_trace(
+        go.Scatter(
+            x=road_xs,
+            y=road_ys,
+            mode="lines",
+            fill="toself",
+            fillcolor="rgba(90, 90, 90, 0.15)",
+            line={"color": "rgba(90, 90, 90, 0.15)", "width": 1},
+            name="Road",
+        )
+    )
     figure.add_trace(
         go.Scatter(
             x=[point[0] for point in left_wall],
@@ -281,6 +375,15 @@ def build_population_figure(payload: dict[str, Any], frame_stride: int = 4) -> g
                 name="Centerline",
             )
         )
+    checkpoint_trace = _gate_trace(checkpoint_gates, color="#F4A261", name="Checkpoints", width=2, dash="dot")
+    if checkpoint_trace is not None:
+        figure.add_trace(checkpoint_trace)
+    start_trace = _gate_trace(start_gate, color="#2A9D8F", name="Start", width=4)
+    if start_trace is not None:
+        figure.add_trace(start_trace)
+    finish_trace = _gate_trace(finish_gate, color="#E63946", name="Finish", width=4, dash="dash")
+    if finish_trace is not None:
+        figure.add_trace(finish_trace)
 
     trace_indexes: list[int] = []
     initial_step = step_values[0]
@@ -356,7 +459,11 @@ def build_population_figure(payload: dict[str, Any], frame_stride: int = 4) -> g
 
     figure.frames = animation_frames
     figure.update_layout(
-        title=f"Generation {payload.get('generation', 0)} population replay",
+        title=(
+            f"Generation {payload.get('generation', 0)} population replay"
+            f" | {track_profile.get('difficulty', 'Course')}"
+            f" | {track_profile.get('checkpoint_count', 0)} checkpoints"
+        ),
         template="plotly_white",
         height=720,
         xaxis={

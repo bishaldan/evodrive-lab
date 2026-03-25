@@ -1,6 +1,6 @@
 DC = docker compose
 
-.PHONY: up down restart build test lint typecheck smoke train-ga train-neat train-ppo benchmark
+.PHONY: up down restart build test lint typecheck smoke train-ga train-neat train-ppo benchmark demo-ga
 
 up:
 	$(DC) up --build
@@ -38,3 +38,6 @@ train-ppo:
 
 benchmark:
 	$(DC) exec api curl -sS -X POST http://localhost:8000/benchmarks -H "Content-Type: application/json" -d '{"algorithms":["ga","neat","ppo"]}'
+
+demo-ga:
+	$(DC) exec api curl -sS -X POST http://localhost:8000/runs -H "Content-Type: application/json" -d '{"name":"github-demo","algorithm":"ga","mode":"train","seed":42,"total_iterations":6,"algorithm_params":{"population_size":6,"elite_count":2,"live_display_count":6},"env":{"physics":{"max_track_segments":40,"segment_length":6.5,"track_width":6.2}}}'

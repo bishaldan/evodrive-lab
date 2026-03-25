@@ -7,12 +7,18 @@ It is built for two audiences at once:
 - people who want a public GitHub project they can run and watch
 - people who want a clean benchmark base for later research experiments
 
+![Animated Replay](docs/media/replay_demo.gif)
+
 The current release focuses on a strong interactive MVP:
 
 - a live `Simulation` tab where multiple cars attempt the same track together
 - generation-by-generation `GA` training that visibly improves over time
+- race-style course rendering with road surface, start/finish gates, and checkpoints
 - saved `Replay` views for trained agents
 - `FastAPI + Streamlit + worker` architecture that runs fully in Docker
+- automatic PNG and GIF export from replay artifacts for GitHub-ready media
+
+![Course Overview](docs/media/course_overview.png)
 
 ## Why This Project Is Interesting
 
@@ -23,6 +29,7 @@ EvoDrive Lab makes the learning process visible:
 - several cars start on the same track
 - weaker policies crash early
 - stronger policies go farther
+- the course shows gates, sectors, and a clearer race context
 - a new generation restarts from the back of the track
 - over time, the population improves
 
@@ -36,6 +43,7 @@ That makes the project a better GitHub demo and a stronger foundation for future
 - deterministic procedural track generation
 - Box2D-backed 2D driving environment with fallback movement logic
 - ray sensors, progress rewards, crash detection, and replay export
+- longer track presets for more challenging simulation runs
 - custom genetic algorithm runner
 - `neat-python` integration
 - lightweight CPU-friendly PPO-style baseline
@@ -87,6 +95,7 @@ make train-ga
 make train-neat
 make train-ppo
 make benchmark
+make demo-ga
 ```
 
 ## Architecture
@@ -122,6 +131,7 @@ Streamlit UI ---> FastAPI ---> SQLite run registry <--- Worker
 - Box2D
 - Plotly
 - pandas
+- matplotlib animation
 - Docker Compose
 
 ## What Is Ready Today
@@ -139,7 +149,6 @@ This is still an early public release, not a final research benchmark.
 
 Still planned:
 
-- stronger README visuals and GIFs
 - more polished replay rendering
 - richer benchmark comparison pages
 - more rigorous multi-seed experiment scripts
@@ -168,6 +177,15 @@ If you run tests directly on the host machine, you may need to install project d
 - The current PPO path is intentionally lightweight so the Docker build stays practical on normal laptops.
 - Runtime outputs in `runs/` and `reports/` are generated artifacts and should not be committed.
 - The public-facing simulation experience is currently GA-first because that gives the clearest visible learning loop.
+
+## Media Export
+
+When a run exports a replay, EvoDrive Lab now also generates:
+
+- a PNG course overview
+- an animated GIF replay
+
+These files are written into `reports/` and are meant to help you populate the README and GitHub project page.
 
 ## Contributing
 

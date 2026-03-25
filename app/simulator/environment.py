@@ -202,12 +202,14 @@ class DrivingEnv(BaseEnv):
             self._step_with_fallback(throttle, steering)
 
         sensor_distances = self._sensor_distances()
-        progress, _, tangent = project_point_to_polyline(self.position, self.track.centerline)
+        progress, projection, tangent = project_point_to_polyline(self.position, self.track.centerline)
         self.progress = float(np.clip(progress, 0.0, 1.0))
         crash_distance = self._wall_distance()
         crashed = crash_distance <= self.physics.car_radius
         terminated = crashed or self.progress >= 0.995
         truncated = self.current_step >= self.physics.max_steps
+        lateral_error = float(np.linalg.norm(self.position - projection))
+        sector = int(np.searchsorted(self.track.checkpoint_progress, self.progress, side="right"))
 
         reward = (self.progress - previous_progress) * self.reward.progress_weight
         reward -= self.reward.time_penalty
@@ -230,6 +232,9 @@ class DrivingEnv(BaseEnv):
                 "progress": round(self.progress, 5),
                 "heading_target": round(heading_target, 5),
                 "sensor_distances": sensor_distances.round(5).tolist(),
+                "lateral_error": round(lateral_error, 5),
+                "sector": sector,
+                "finished": self.progress >= 0.995,
                 "crashed": crashed,
             }
         )
@@ -250,6 +255,7 @@ class DrivingEnv(BaseEnv):
             "crashed": crashed,
             "track_seed": self.track_seed,
             "steps": self.current_step,
+            "sector": sector,
         }
         return observation, float(reward), terminated, truncated, info
 
@@ -262,6 +268,10 @@ class DrivingEnv(BaseEnv):
             "centerline": self.track.centerline.round(4).tolist(),
             "left_wall": self.track.left_wall.round(4).tolist(),
             "right_wall": self.track.right_wall.round(4).tolist(),
+            "start_gate": self.track.start_gate.round(4).tolist(),
+            "finish_gate": self.track.finish_gate.round(4).tolist(),
+            "checkpoint_gates": self.track.checkpoint_gates.round(4).tolist(),
+            "track_profile": self.track.profile,
             "physics": {
                 "sensor_range": self.physics.sensor_range,
                 "num_rays": self.physics.num_rays,

@@ -13,6 +13,11 @@ import streamlit as st
 from app.web.replay_viz import build_population_figure, build_replay_figure
 
 API_URL = os.getenv("EVODRIVE_API_URL", "http://localhost:8000")
+TRACK_PRESETS = {
+    "Standard": {"max_track_segments": 28, "segment_length": 6.0, "track_width": 6.0},
+    "Long": {"max_track_segments": 40, "segment_length": 6.5, "track_width": 6.2},
+    "Endurance": {"max_track_segments": 52, "segment_length": 7.0, "track_width": 6.5},
+}
 
 
 def api_get(path: str):
@@ -51,7 +56,7 @@ simulation_tab, train_tab, replay_tab, benchmark_tab, runs_tab = st.tabs(
 
 with simulation_tab:
     st.subheader("Live population simulation")
-    st.caption("Start a GA generation loop and watch multiple cars attempt the same track together.")
+    st.caption("Start a GA generation loop and watch multiple cars tackle a full race-style course together.")
     config_col, selected_col = st.columns([1.2, 1.8])
     with config_col:
         simulation_seed = st.number_input("Simulation seed", min_value=0, max_value=999999, value=42, key="sim-seed")
@@ -63,6 +68,11 @@ with simulation_tab:
             key="sim-generations",
         )
         population_size = st.slider("Cars per generation", min_value=3, max_value=12, value=6, key="sim-population")
+        track_preset_name = st.selectbox("Track length preset", list(TRACK_PRESETS.keys()), index=1)
+        track_preset = TRACK_PRESETS[track_preset_name]
+        st.caption(
+            f"{track_preset['max_track_segments']} segments | stride {track_preset['segment_length']} | width {track_preset['track_width']}"
+        )
         frame_stride_live = st.slider("Playback speed / sampling", min_value=1, max_value=8, value=3, key="sim-stride")
         auto_refresh = st.checkbox("Auto refresh while training", value=True)
         if st.button("Start Simulation", use_container_width=True):
@@ -77,6 +87,7 @@ with simulation_tab:
                     "elite_count": max(2, int(population_size) // 3),
                     "live_display_count": int(population_size),
                 },
+                "env": {"physics": track_preset},
             }
             result = api_post("/runs", payload)
             st.session_state["live_run_id"] = result["id"]
@@ -111,6 +122,7 @@ with simulation_tab:
                     figure = build_population_figure(live_state, frame_stride=frame_stride_live)
                     st.plotly_chart(figure, use_container_width=True)
                 with stat_col:
+                    track_profile = live_state.get("track_profile", {})
                     st.json(
                         {
                             "status": details["status"],
@@ -119,6 +131,10 @@ with simulation_tab:
                             "cars_shown": live_state["display_count"],
                             "best_score": live_state["best_score"],
                             "mean_score": live_state["mean_score"],
+                            "difficulty": track_profile.get("difficulty"),
+                            "track_length": track_profile.get("track_length"),
+                            "corners": track_profile.get("corner_count"),
+                            "checkpoints": track_profile.get("checkpoint_count"),
                         }
                     )
                     leaderboard_df = pd.DataFrame(live_state.get("leaderboard", []))
@@ -143,12 +159,15 @@ with train_tab:
     algorithm = st.selectbox("Algorithm", ["ga", "neat", "ppo"])
     iterations = st.number_input("Total iterations", min_value=1, max_value=50, value=8)
     seed = st.number_input("Seed", min_value=0, max_value=999999, value=42)
+    train_track_preset_name = st.selectbox("Track length preset", list(TRACK_PRESETS.keys()), index=0, key="train-track-preset")
+    train_track_preset = TRACK_PRESETS[train_track_preset_name]
     if st.button("Queue run", use_container_width=True):
         payload = {
             "algorithm": algorithm,
             "mode": "train",
             "seed": int(seed),
             "total_iterations": int(iterations),
+            "env": {"physics": train_track_preset},
         }
         result = api_post("/runs", payload)
         st.success(f"Queued run {result['id']} ({result['algorithm']}).")
@@ -181,6 +200,7 @@ with replay_tab:
                 latest = frames.iloc[-1].to_dict() if not frames.empty else {}
                 left_col, right_col = st.columns(2)
                 with left_col:
+                    track_profile = payload.get("track_profile", {})
                     st.json(
                         {
                             "track_seed": payload["track_seed"],
@@ -188,6 +208,9 @@ with replay_tab:
                             "final_progress": latest.get("progress"),
                             "final_speed": latest.get("speed"),
                             "crashed": latest.get("crashed"),
+                            "difficulty": track_profile.get("difficulty"),
+                            "track_length": track_profile.get("track_length"),
+                            "corners": track_profile.get("corner_count"),
                         }
                     )
                 with right_col:
