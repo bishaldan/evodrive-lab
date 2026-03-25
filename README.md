@@ -1,66 +1,89 @@
 # EvoDrive Lab
 
-EvoDrive Lab is a Docker-first Python playground for training and visualizing driving agents on procedurally generated 2D tracks.
+EvoDrive Lab is a Docker-first Python project for training and visualizing AI driving agents on procedurally generated 2D tracks.
 
-It is built for two audiences at once:
+It is built to be two things at the same time:
 
-- people who want a public GitHub project they can run and watch
-- people who want a clean benchmark base for later research experiments
+- a public GitHub project people can run, watch, and learn from
+- a clean experimental base for future benchmark and research work
 
 ![Eight-car population replay](docs/media/population_demo.gif)
 
-The current release focuses on a strong interactive MVP:
+## What This Project Does
 
-- a live `Simulation` tab where eight cars attempt the same track together
-- generation-by-generation `GA` training that visibly improves over time
-- race-style course rendering with road surface, start/finish gates, and checkpoints
-- saved `Replay` views for trained agents
-- `FastAPI + Streamlit + worker` architecture that runs fully in Docker
-- automatic PNG and GIF export from replay artifacts for GitHub-ready media
+EvoDrive Lab simulates small cars driving on generated race tracks. Each car receives observations from forward-facing sensors, chooses steering and throttle actions, and tries to survive long enough to make progress through the course.
+
+Instead of hiding the learning process, this project makes it visible:
+
+- multiple cars start on the same track
+- weak policies crash or stall early
+- stronger policies go farther
+- a new generation starts and tries again
+- over time, the population improves
+
+That makes the project useful both as a visual demo and as a foundation for more serious experimentation.
+
+## Why It Is Interesting
+
+Many driving AI demos only show a single trained agent after learning has already happened.
+
+EvoDrive Lab focuses on the full loop:
+
+- live population simulation
+- replay inspection
+- procedural track generation
+- reproducible runs through Docker
+- a codebase that can grow toward benchmark-quality experiments
+
+If you want a project where people can immediately open the repo and understand what is happening, this is the point of the design.
+
+## What You Can See In The App
+
+- a `Simulation` tab where multiple cars drive on the same track together
+- generation-by-generation `GA` learning that visibly changes behavior over time
+- a `Replay` tab for saved single-run and population replays
+- race-style rendering with start gate, finish gate, checkpoints, centerline, and walls
+- run history, metrics, and exported media artifacts
 
 ![Course Overview](docs/media/course_overview.png)
 
 ![Completed Lap](docs/media/reference_lap.gif)
 
-## Why This Project Is Interesting
+## How It Works
 
-Most AI driving demos either show one trained car or hide the training loop completely.
+At a high level, the system works like this:
 
-EvoDrive Lab makes the learning process visible:
+1. The simulator generates a deterministic 2D track from a seed.
+2. Cars observe the track through ray-style sensors and motion state.
+3. A policy outputs steering and throttle.
+4. The environment evaluates progress, crashes, and episode completion.
+5. Training algorithms generate better policies over repeated runs.
+6. Replays, charts, and GIFs are exported for inspection.
 
-- eight cars start on the same track
-- weaker policies crash early
-- stronger policies go farther
-- the course shows gates, sectors, and a clearer race context
-- a new generation restarts from the back of the track
-- over time, the population improves
+Right now, the clearest public-facing workflow is the genetic algorithm path, because it makes the improvement loop easy to watch in real time.
 
-That makes the project a better GitHub demo and a stronger foundation for future benchmark work.
+## Current Algorithms
 
-## Current Features
+- `GA`
+  Custom genetic algorithm used for visible generation-by-generation learning
+- `NEAT`
+  Integrated through `neat-python`
+- `PPO`
+  Lightweight CPU-friendly baseline for comparison and future expansion
+
+## Core Features
 
 - FastAPI backend for run creation and querying
-- Streamlit frontend with `Simulation`, `Train`, `Replay`, `Benchmark`, and `Runs` tabs
-- background worker that executes queued runs from SQLite
+- Streamlit frontend for simulation, replay, benchmark, and run browsing
+- background worker for queued jobs
+- SQLite-backed run tracking
 - deterministic procedural track generation
-- Box2D-backed 2D driving environment with fallback movement logic
-- ray sensors, progress rewards, crash detection, and replay export
-- longer track presets for more challenging simulation runs
-- custom genetic algorithm runner
-- `neat-python` integration
-- lightweight CPU-friendly PPO-style baseline
-- report export to CSV and PNG
-
-## Demo Flow
-
-The best way to try the project is:
-
-1. Start the app with Docker
-2. Open the `Simulation` tab
-3. Press `Start Simulation`
-4. Watch 3 or more cars drive on the same track
-5. Refresh automatically as each new generation is produced
-6. Open the `Replay` tab to inspect saved single-agent runs
+- Box2D-based 2D driving environment with fallback motion logic
+- sensor observations, progress rewards, crash detection, and replay export
+- course overview PNG export
+- population replay GIF export
+- completed-lap GIF export
+- Docker Compose workflow for local setup
 
 ## Quickstart
 
@@ -72,7 +95,7 @@ The best way to try the project is:
 ### Run Locally
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/bishaldan/evodrive-lab.git
 cd evodrive_lab
 docker compose up --build
 ```
@@ -81,6 +104,14 @@ Open:
 
 - UI: [http://localhost:8501](http://localhost:8501)
 - API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+### Best First Demo
+
+1. Start the stack with Docker.
+2. Open the `Simulation` tab.
+3. Start a run and watch several cars try the same course together.
+4. Open the `Replay` tab to inspect saved results.
+5. Use the exported GIFs and PNGs in `reports/` for documentation or sharing.
 
 ### Useful Commands
 
@@ -105,23 +136,23 @@ make demo-ga
 ```text
 Streamlit UI ---> FastAPI ---> SQLite run registry <--- Worker
                                  |
-                                 +--> run artifacts / reports / replays
-                                 |
                                  +--> simulator + GA / NEAT / PPO runners
+                                 |
+                                 +--> run artifacts / reports / replays
 ```
 
 ## Project Layout
 
 - `app/api` - API routes and app bootstrap
 - `app/web` - Streamlit frontend and replay rendering
-- `app/worker` - polling worker and run dispatcher
+- `app/worker` - queued run execution
 - `app/simulator` - track generation, physics, sensors, and replay export
 - `app/algorithms` - GA, NEAT, and PPO runners
 - `app/storage` - SQLite models and repository helpers
 - `app/benchmark` - evaluation helpers and track suites
 - `tests` - unit and integration tests
-- `runs` - runtime artifacts written by the app
-- `reports` - exported CSV and chart artifacts
+- `runs` - runtime artifacts generated by the app
+- `reports` - exported charts and media
 
 ## Tech Stack
 
@@ -133,28 +164,37 @@ Streamlit UI ---> FastAPI ---> SQLite run registry <--- Worker
 - Box2D
 - Plotly
 - pandas
-- matplotlib animation
+- matplotlib
 - Docker Compose
 
-## What Is Ready Today
+## Who This Repo Is For
 
-This release is suitable for:
+This repo is a good fit if you want:
 
-- public GitHub publication as an MVP
-- interactive demos
-- early contributor feedback
-- evolving the benchmark into a stronger research platform
+- a visual AI project for GitHub
+- a simulation project that is easy to demo
+- a base for future experimentation with neuroevolution and RL
+- a reproducible local setup without complex manual installation
 
-## What Is Not Finished Yet
+## Current Status
 
-This is still an early public release, not a final research benchmark.
+This is a strong public MVP, not a finished research benchmark.
 
-Still planned:
+What is already solid:
 
-- more polished replay rendering
+- the app runs in Docker
+- the frontend is usable
+- multi-car simulation and replay are working
+- media export is working
+- the project is good enough to publish and demo publicly
+
+What is still planned:
+
 - richer benchmark comparison pages
-- more rigorous multi-seed experiment scripts
-- paper-quality figures and result tables
+- stronger experiment orchestration
+- more rigorous multi-seed evaluation
+- paper-quality result tables and figures
+- a stronger research protocol for arXiv-style publication
 
 ## Testing
 
@@ -166,34 +206,28 @@ make lint
 make typecheck
 ```
 
-If you run tests directly on the host machine, you may need to install project dependencies locally first.
+If you run checks directly on the host machine, you may need to install dependencies locally first.
 
 ## Hardware Notes
 
 - a 16 GB laptop is enough for development and light runs
 - 32 GB RAM is better for smoother benchmarking
-- PPO-heavy experiments benefit from stronger hardware, but the current baseline remains CPU-friendly
-
-## Notes
-
-- The current PPO path is intentionally lightweight so the Docker build stays practical on normal laptops.
-- Runtime outputs in `runs/` and `reports/` are generated artifacts and should not be committed.
-- The public-facing simulation experience is currently GA-first because that gives the clearest visible learning loop.
+- the current PPO path is intentionally lightweight so the project stays practical on normal laptops
 
 ## Media Export
 
-When a run exports a replay, EvoDrive Lab now also generates:
+When a run exports replay data, EvoDrive Lab can also generate:
 
-- a PNG course overview
+- a course overview PNG
 - a population replay GIF
-- an animated replay GIF
-- a completed-lap GIF that cleanly traverses the full course
+- a single-run replay GIF
+- a completed-lap GIF
 
-These files are written into `reports/` and are meant to help you populate the README and GitHub project page.
+These artifacts are written into `reports/` and can be reused in the README, release notes, social posts, or future paper drafts.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the local development workflow and current contribution priorities.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the local workflow and contribution priorities.
 
 ## License
 
