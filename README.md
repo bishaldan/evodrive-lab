@@ -7,11 +7,11 @@ It is built for two audiences at once:
 - people who want a public GitHub project they can run and watch
 - people who want a clean benchmark base for later research experiments
 
-![Population Replay](docs/media/population_demo.gif)
+![Eight-car population replay](docs/media/population_demo.gif)
 
 The current release focuses on a strong interactive MVP:
 
-- a live `Simulation` tab where multiple cars attempt the same track together
+- a live `Simulation` tab where eight cars attempt the same track together
 - generation-by-generation `GA` training that visibly improves over time
 - race-style course rendering with road surface, start/finish gates, and checkpoints
 - saved `Replay` views for trained agents
@@ -28,7 +28,7 @@ Most AI driving demos either show one trained car or hide the training loop comp
 
 EvoDrive Lab makes the learning process visible:
 
-- several cars start on the same track
+- eight cars start on the same track
 - weaker policies crash early
 - stronger policies go farther
 - the course shows gates, sectors, and a clearer race context

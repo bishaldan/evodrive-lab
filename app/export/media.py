@@ -237,7 +237,7 @@ def export_population_media(
     *,
     prefix: str | None = None,
     stride: int = 3,
-    max_frames: int = 60,
+    max_frames: int = 84,
 ) -> list[tuple[str, str, dict[str, object]]]:
     live_file = Path(live_path)
     if not live_file.exists():
@@ -307,7 +307,7 @@ def export_population_media(
         interval=95,
         blit=False,
     )
-    population_animation.save(gif_path, writer=animation.PillowWriter(fps=11))
+    population_animation.save(gif_path, writer=animation.PillowWriter(fps=10))
     plt.close(figure)
 
     return [
