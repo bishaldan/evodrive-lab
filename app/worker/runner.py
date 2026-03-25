@@ -5,7 +5,7 @@ from pathlib import Path
 from app.algorithms.ga import run_ga
 from app.algorithms.neat_runner import run_neat
 from app.algorithms.ppo_runner import run_ppo
-from app.export.media import export_replay_media
+from app.export.media import export_population_media, export_replay_media
 from app.config.models import MetricPoint, RunConfig
 from app.export.reporting import export_run_report
 from app.storage.models import RunRecord
@@ -41,6 +41,13 @@ def execute_run(record: RunRecord, runs_dir: Path, reports_dir: Path) -> None:
                 except Exception:
                     media_artifacts = []
                 for media_type, media_path, media_metadata in media_artifacts:
+                    add_artifact(record.id, media_type, media_path, media_metadata)
+            if artifact_type == "live" and path:
+                try:
+                    population_artifacts = export_population_media(path, reports_dir, prefix=record.id)
+                except Exception:
+                    population_artifacts = []
+                for media_type, media_path, media_metadata in population_artifacts:
                     add_artifact(record.id, media_type, media_path, media_metadata)
         for report_path in report_paths:
             add_artifact(record.id, "report", report_path, {})

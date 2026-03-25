@@ -70,6 +70,44 @@ def _set_camera(ax, payload: dict[str, object]) -> None:
     ax.set_facecolor("#f8f5ee")
 
 
+def _reference_lap_frames(centerline: np.ndarray, *, subdivisions: int = 3) -> list[dict[str, object]]:
+    frames: list[dict[str, object]] = []
+    if len(centerline) < 2:
+        return frames
+    step = 1
+    for index in range(len(centerline) - 1):
+        start = centerline[index]
+        end = centerline[index + 1]
+        for ratio in np.linspace(0.0, 1.0, subdivisions, endpoint=False):
+            position = start + ((end - start) * ratio)
+            direction = end - start
+            heading = math.atan2(direction[1], direction[0])
+            progress = (index + ratio) / max(len(centerline) - 1, 1)
+            frames.append(
+                {
+                    "step": step,
+                    "position": position.tolist(),
+                    "heading": heading,
+                    "progress": progress,
+                    "sector": 0,
+                    "crashed": False,
+                }
+            )
+            step += 1
+    last_direction = centerline[-1] - centerline[-2]
+    frames.append(
+        {
+            "step": step,
+            "position": centerline[-1].tolist(),
+            "heading": math.atan2(last_direction[1], last_direction[0]),
+            "progress": 1.0,
+            "sector": 0,
+            "crashed": False,
+        }
+    )
+    return frames
+
+
 def export_replay_media(
     replay_path: str | Path,
     reports_dir: Path,
@@ -90,6 +128,7 @@ def export_replay_media(
     stem = prefix or replay_file.stem
     still_path = reports_dir / f"{stem}_course.png"
     gif_path = reports_dir / f"{stem}_replay.gif"
+    reference_gif_path = reports_dir / f"{stem}_reference_lap.gif"
 
     car_scale = float(payload.get("physics", {}).get("car_radius", 0.8))
     sampled_frames = frames[:: max(stride, 1)]
@@ -153,7 +192,128 @@ def export_replay_media(
     replay_animation.save(gif_path, writer=animation.PillowWriter(fps=12))
     plt.close(anim_figure)
 
+    reference_frames = _reference_lap_frames(np.asarray(payload["centerline"], dtype=float), subdivisions=4)
+    ref_figure, ref_axis = plt.subplots(figsize=(8.8, 8.8))
+    _draw_course(ref_axis, payload)
+    _set_camera(ref_axis, payload)
+    ref_line, = ref_axis.plot([], [], color="#2a9d8f", linewidth=2.2, alpha=0.95, zorder=4)
+    ref_patch = Polygon(
+        _car_outline(reference_frames[0]["position"], float(reference_frames[0]["heading"]), car_scale),
+        closed=True,
+    )
+    ref_patch.set_facecolor("#2a9d8f")
+    ref_patch.set_edgecolor("#155e63")
+    ref_patch.set_linewidth(1.5)
+    ref_axis.add_patch(ref_patch)
+
+    def update_reference(frame_index: int):
+        frame = reference_frames[frame_index]
+        path = np.asarray([item["position"] for item in reference_frames[: frame_index + 1]], dtype=float)
+        ref_line.set_data(path[:, 0], path[:, 1])
+        ref_patch.set_xy(_car_outline(frame["position"], float(frame["heading"]), car_scale))
+        ref_axis.set_title(f"Reference lap | Progress {float(frame['progress']):.2f}", fontsize=12)
+        return ref_line, ref_patch
+
+    reference_animation = animation.FuncAnimation(
+        ref_figure,
+        update_reference,
+        frames=len(reference_frames),
+        interval=85,
+        blit=False,
+    )
+    reference_animation.save(reference_gif_path, writer=animation.PillowWriter(fps=12))
+    plt.close(ref_figure)
+
     return [
         ("media", str(still_path), {"source": str(replay_file), "format": "png", "kind": "course_overview"}),
         ("media", str(gif_path), {"source": str(replay_file), "format": "gif", "kind": "animated_replay"}),
+        ("media", str(reference_gif_path), {"source": str(replay_file), "format": "gif", "kind": "reference_lap"}),
+    ]
+
+
+def export_population_media(
+    live_path: str | Path,
+    reports_dir: Path,
+    *,
+    prefix: str | None = None,
+    stride: int = 3,
+    max_frames: int = 60,
+) -> list[tuple[str, str, dict[str, object]]]:
+    live_file = Path(live_path)
+    if not live_file.exists():
+        return []
+    payload = json.loads(live_file.read_text(encoding="utf-8"))
+    cars = payload.get("cars", [])
+    if not cars:
+        return []
+
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    stem = prefix or live_file.stem
+    gif_path = reports_dir / f"{stem}_population.gif"
+
+    max_step = max((len(car.get("frames", [])) for car in cars), default=0)
+    if max_step == 0:
+        return []
+    step_values = list(range(1, max_step + 1, max(stride, 1)))
+    if len(step_values) > max_frames:
+        sample_indices = np.linspace(0, len(step_values) - 1, num=max_frames, dtype=int)
+        step_values = [step_values[index] for index in sample_indices.tolist()]
+    elif step_values[-1] != max_step:
+        step_values.append(max_step)
+
+    car_scale = float(payload.get("physics", {}).get("car_radius", 0.8))
+
+    figure, axis = plt.subplots(figsize=(9.4, 9.4))
+    _draw_course(axis, payload)
+    _set_camera(axis, payload)
+
+    trajectory_lines = []
+    car_patches = []
+    for car in cars:
+        color = car.get("color", "#118ab2")
+        (line,) = axis.plot([], [], color=color, linewidth=1.8, alpha=0.75, zorder=4)
+        patch = Polygon(_car_outline(car["frames"][0]["position"], float(car["frames"][0]["heading"]), car_scale), closed=True)
+        patch.set_facecolor(color)
+        patch.set_edgecolor("#23313f")
+        patch.set_linewidth(1.1)
+        axis.add_patch(patch)
+        trajectory_lines.append(line)
+        car_patches.append(patch)
+
+    def update_population(frame_index: int):
+        step = step_values[frame_index]
+        for idx, car in enumerate(cars):
+            frames = car.get("frames", [])
+            if not frames:
+                continue
+            position_index = min(max(step, 1), len(frames)) - 1
+            current = frames[position_index]
+            path = np.asarray([frame["position"] for frame in frames[: position_index + 1]], dtype=float)
+            trajectory_lines[idx].set_data(path[:, 0], path[:, 1])
+            body_color = "#d62828" if current.get("crashed") else car.get("color", "#118ab2")
+            trajectory_lines[idx].set_color(body_color)
+            car_patches[idx].set_facecolor(body_color)
+            car_patches[idx].set_xy(_car_outline(current["position"], float(current["heading"]), car_scale))
+        axis.set_title(
+            f"Population replay | Generation {payload.get('generation', 0)} | Step {step}",
+            fontsize=12,
+        )
+        return [*trajectory_lines, *car_patches]
+
+    population_animation = animation.FuncAnimation(
+        figure,
+        update_population,
+        frames=len(step_values),
+        interval=95,
+        blit=False,
+    )
+    population_animation.save(gif_path, writer=animation.PillowWriter(fps=11))
+    plt.close(figure)
+
+    return [
+        (
+            "media",
+            str(gif_path),
+            {"source": str(live_file), "format": "gif", "kind": "population_replay"},
+        )
     ]

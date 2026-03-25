@@ -7,7 +7,7 @@ It is built for two audiences at once:
 - people who want a public GitHub project they can run and watch
 - people who want a clean benchmark base for later research experiments
 
-![Animated Replay](docs/media/replay_demo.gif)
+![Population Replay](docs/media/population_demo.gif)
 
 The current release focuses on a strong interactive MVP:
 
@@ -19,6 +19,8 @@ The current release focuses on a strong interactive MVP:
 - automatic PNG and GIF export from replay artifacts for GitHub-ready media
 
 ![Course Overview](docs/media/course_overview.png)
+
+![Completed Lap](docs/media/reference_lap.gif)
 
 ## Why This Project Is Interesting
 
@@ -183,7 +185,9 @@ If you run tests directly on the host machine, you may need to install project d
 When a run exports a replay, EvoDrive Lab now also generates:
 
 - a PNG course overview
-- an animated GIF replay
+- a population replay GIF
+- an animated replay GIF
+- a completed-lap GIF that cleanly traverses the full course
 
 These files are written into `reports/` and are meant to help you populate the README and GitHub project page.
 
