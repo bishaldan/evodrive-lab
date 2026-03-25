@@ -2,9 +2,20 @@
 
 ![Eight-car population replay](docs/media/population_demo.gif)
 
-## What This Project Does
+EvoDrive Lab is a Python simulation project where AI cars learn to drive on procedurally generated 2D tracks. It combines a live multi-car demo, replay tools, and a Docker-first workflow so the project is easy to run, inspect, and extend.
 
-EvoDrive Lab simulates small cars driving on generated race tracks. Each car receives observations from forward-facing sensors, chooses steering and throttle actions, and tries to survive long enough to make progress through the course.
+## Highlights
+
+- live eight-car population simulation
+- procedurally generated race tracks
+- genetic algorithm, NEAT, and PPO-style training paths
+- replay export for GIFs and course snapshots
+- FastAPI + Streamlit + worker architecture
+- reproducible Docker setup for demos and experiments
+
+## Overview
+
+Each car receives observations from forward-facing sensors, chooses steering and throttle actions, and tries to survive long enough to make progress through the course.
 
 Instead of hiding the learning process, this project makes it visible:
 
@@ -16,7 +27,7 @@ Instead of hiding the learning process, this project makes it visible:
 
 That makes the project useful both as a visual demo and as a foundation for more serious experimentation.
 
-## Why It Is Interesting
+## Why This Project Stands Out
 
 Many driving AI demos only show a single trained agent after learning has already happened.
 
@@ -30,7 +41,7 @@ EvoDrive Lab focuses on the full loop:
 
 If you want a project where people can immediately open the repo and understand what is happening, this is the point of the design.
 
-## What You Can See In The App
+## What You Can Do
 
 - a `Simulation` tab where multiple cars drive on the same track together
 - generation-by-generation `GA` learning that visibly changes behavior over time
@@ -55,7 +66,7 @@ At a high level, the system works like this:
 
 Right now, the clearest public-facing workflow is the genetic algorithm path, because it makes the improvement loop easy to watch in real time.
 
-## Current Algorithms
+## Algorithms
 
 - `GA`
   Custom genetic algorithm used for visible generation-by-generation learning
@@ -64,7 +75,7 @@ Right now, the clearest public-facing workflow is the genetic algorithm path, be
 - `PPO`
   Lightweight CPU-friendly baseline for comparison and future expansion
 
-## Core Features
+## Feature Set
 
 - FastAPI backend for run creation and querying
 - Streamlit frontend for simulation, replay, benchmark, and run browsing
@@ -89,7 +100,7 @@ Right now, the clearest public-facing workflow is the genetic algorithm path, be
 
 ```bash
 git clone https://github.com/bishaldan/evodrive-lab.git
-cd evodrive_lab
+cd evodrive-lab
 docker compose up --build
 ```
 
@@ -98,7 +109,7 @@ Open:
 - UI: [http://localhost:8501](http://localhost:8501)
 - API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-### Best First Demo
+### Best First Run
 
 1. Start the stack with Docker.
 2. Open the `Simulation` tab.
@@ -134,7 +145,7 @@ Streamlit UI ---> FastAPI ---> SQLite run registry <--- Worker
                                  +--> run artifacts / reports / replays
 ```
 
-## Project Layout
+## Repository Layout
 
 - `app/api` - API routes and app bootstrap
 - `app/web` - Streamlit frontend and replay rendering
@@ -160,7 +171,7 @@ Streamlit UI ---> FastAPI ---> SQLite run registry <--- Worker
 - matplotlib
 - Docker Compose
 
-## Who This Repo Is For
+## Good Fit For
 
 This repo is a good fit if you want:
 
@@ -169,7 +180,7 @@ This repo is a good fit if you want:
 - a base for future experimentation with neuroevolution and RL
 - a reproducible local setup without complex manual installation
 
-## Current Status
+## Project Status
 
 This is a strong public MVP, not a finished research benchmark.
 
@@ -189,7 +200,7 @@ What is still planned:
 - paper-quality result tables and figures
 - a stronger research protocol for arXiv-style publication
 
-## Testing
+## Development Checks
 
 The most reliable way to test the project is inside Docker:
 
