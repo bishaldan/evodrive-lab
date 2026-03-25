@@ -1,0 +1,50 @@
+services:
+  api:
+    image: evodrive_lab-app:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uvicorn app.api.main:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: sqlite:////workspace/runs/evodrive.db
+      EVODRIVE_RUNS_DIR: /workspace/runs
+      EVODRIVE_REPORTS_DIR: /workspace/reports
+    volumes:
+      - .:/workspace
+    depends_on:
+      - worker
+
+  web:
+    image: evodrive_lab-app:latest
+    command: streamlit run app/web/streamlit_app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      EVODRIVE_API_URL: http://api:8000
+    volumes:
+      - .:/workspace
+    depends_on:
+      - api
+
+  worker:
+    image: evodrive_lab-app:latest
+    command: python -m app.worker.main
+    environment:
+      DATABASE_URL: sqlite:////workspace/runs/evodrive.db
+      EVODRIVE_RUNS_DIR: /workspace/runs
+      EVODRIVE_REPORTS_DIR: /workspace/reports
+      EVODRIVE_POLL_INTERVAL: "3"
+    volumes:
+      - .:/workspace
+
+  db:
+    image: postgres:16-alpine
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_DB: evodrive
+      POSTGRES_USER: evodrive
+      POSTGRES_PASSWORD: evodrive
+    ports:
+      - "5432:5432"

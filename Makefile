@@ -1,0 +1,40 @@
+DC = docker compose
+
+.PHONY: up down restart build test lint typecheck smoke train-ga train-neat train-ppo benchmark
+
+up:
+	$(DC) up --build
+
+down:
+	$(DC) down
+
+restart:
+	$(DC) down
+	$(DC) up -d
+
+build:
+	$(DC) build
+
+test:
+	$(DC) run --rm api pytest tests -q
+
+lint:
+	$(DC) run --rm api ruff check .
+
+typecheck:
+	$(DC) run --rm api mypy app
+
+smoke:
+	$(DC) exec api curl -sS http://localhost:8000/health
+
+train-ga:
+	$(DC) exec api curl -sS -X POST http://localhost:8000/runs -H "Content-Type: application/json" -d '{"algorithm":"ga","mode":"train","total_iterations":8}'
+
+train-neat:
+	$(DC) exec api curl -sS -X POST http://localhost:8000/runs -H "Content-Type: application/json" -d '{"algorithm":"neat","mode":"train","total_iterations":6}'
+
+train-ppo:
+	$(DC) exec api curl -sS -X POST http://localhost:8000/runs -H "Content-Type: application/json" -d '{"algorithm":"ppo","mode":"train","total_iterations":1000,"algorithm_params":{"total_timesteps":1000}}'
+
+benchmark:
+	$(DC) exec api curl -sS -X POST http://localhost:8000/benchmarks -H "Content-Type: application/json" -d '{"algorithms":["ga","neat","ppo"]}'
