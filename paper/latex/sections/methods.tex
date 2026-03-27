@@ -1,9 +1,9 @@
 \section{Compared Methods}
 
-\textbf{Genetic Algorithm.} EvoDrive Lab includes a custom genetic algorithm that evolves policy weights generation by generation. This is the clearest method for the project's live multi-car simulation because population turnover is directly visible in the interface and replay outputs.
+\textbf{Genetic Algorithm.} EvoDrive Lab includes a custom genetic algorithm that evolves policy weights generation by generation. In the frozen paper protocol, the GA runs for 12 iterations per seed and serves as the most natural fit for the live multi-car simulation because population turnover is directly visible in the interface and replay outputs.
 
-\textbf{NEAT.} The benchmark also integrates \texttt{neat-python} as a topology-evolving baseline. This allows comparison between direct parameter evolution and evolving network structure.
+\textbf{NEAT.} The benchmark also integrates \texttt{neat-python} as a topology-evolving baseline. It uses the same environment and evaluation suites as the other methods and also runs for 12 iterations per seed in the paper configuration. This allows comparison between direct parameter evolution and evolving network structure under a shared benchmark budget.
 
-\textbf{PPO-style baseline.} The repository contains a lightweight in-repo implementation of PPO-style policy optimization. This baseline is intentionally modest: it is included to provide a policy-gradient comparison point, not to stand in for a large production RL stack.
+\textbf{PPO-style baseline.} The repository contains a lightweight in-repo implementation of PPO-style policy optimization. In the paper configuration it runs for 8 outer iterations and 8192 total timesteps per seed. This baseline is intentionally modest: it is included to provide a policy-gradient comparison point, not to stand in for a large production RL stack.
 
-All three methods share the same environment, train/validation/test suites, and evaluation metrics.
+All three methods share the same observation interface, action interface, train/validation/test suites, and evaluation metrics. The benchmark therefore isolates differences in training behavior rather than changing environment semantics between algorithms.

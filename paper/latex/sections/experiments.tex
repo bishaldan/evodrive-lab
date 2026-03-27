@@ -1,7 +1,17 @@
 \section{Experimental Protocol}
 
-The main benchmark compares GA, NEAT, and the PPO-style baseline across fixed random seeds. The benchmark uses deterministic train, validation, and test suites defined in code. The paper also includes two small ablations chosen for high value relative to implementation time: sensor count and track length.
+The main benchmark compares GA, NEAT, and the PPO-style baseline across five fixed random seeds: 7, 11, 23, 42, and 101. The benchmark uses deterministic train, validation, and test suites defined in code. For the main comparison, each method is trained under the frozen configuration committed in the repository and evaluated with the same reporting pipeline.
 
-The sensor-count ablation compares five-ray and seven-ray observation settings. The track-length ablation compares a standard track profile with a longer track profile. These ablations were selected because they are already close to existing simulator controls and can be reproduced without introducing new algorithmic components.
+The paper includes two compact ablations chosen for high value relative to implementation time. The sensor-count ablation compares five-ray and seven-ray observation settings. The track-length ablation compares a standard track profile with a longer profile defined by a higher segment count, slightly longer segment length, and slightly wider track geometry. These ablations were selected because they are already close to existing simulator controls and can be reproduced without introducing new algorithmic components.
 
-The experiment pipeline is designed to regenerate runs, aggregate summaries, paper-ready figures, and markdown/LaTeX-ready tables from code rather than hand-edited spreadsheets.
+Each experiment family is aggregated across seeds into mean and standard-deviation summaries. The main paper tables and figures are generated directly from those outputs rather than from hand-edited spreadsheets. This design is intended to keep the reported numbers reproducible from the public repository state.
+
+The quantitative comparison focuses on four reported metrics:
+\begin{itemize}[leftmargin=1.5em]
+    \item mean reward,
+    \item mean completion,
+    \item crash rate,
+    \item mean episode length.
+\end{itemize}
+
+The analysis also uses validation-to-test generalization gaps as a compact way to describe whether a method that performs well on optimization-adjacent tracks maintains similar behavior on held-out procedural tracks.
