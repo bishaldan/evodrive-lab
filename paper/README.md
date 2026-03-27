@@ -1,8 +1,8 @@
 # EvoDrive Lab Paper Workspace
 
-This folder holds the first paper-planning materials for EvoDrive Lab.
+This folder now contains the paper-facing experiment and manuscript workflow for EvoDrive Lab.
 
-The goal is to turn the current project into a small but credible paper centered on:
+The paper is framed around:
 
 `generalization of learned driving agents on unseen procedural 2D tracks`
 
@@ -39,14 +39,74 @@ The current thesis to test is:
 
 **Different training methods may achieve similar training performance while showing meaningfully different generalization behavior on unseen procedural tracks.**
 
+## Paper Workflow
+
+Start the Docker stack first:
+
+```bash
+docker compose up -d --build
+```
+
+Queue the canonical paper matrices:
+
+```bash
+make paper-queue-main
+make paper-queue-sensors
+make paper-queue-tracks
+```
+
+Or queue everything at once:
+
+```bash
+make paper-queue-full
+```
+
+Aggregate the current registry into paper outputs:
+
+```bash
+docker compose exec api python -m app.paper_tools.report aggregate-all
+```
+
+This writes:
+
+- `paper/results/paper_run_manifest.csv`
+- `paper/results/paper_status.md`
+- `paper/results/paper_main_runs.csv`
+- `paper/results/paper_main_summary.csv`
+- `paper/results/paper_ablation_sensors_summary.csv`
+- `paper/results/paper_ablation_tracks_summary.csv`
+- `paper/results/paper_qualitative_cases.csv`
+
+Build paper figures after the matrices are complete:
+
+```bash
+docker compose exec api python -m app.paper_tools.plots build-all
+```
+
+The plotting command is intentionally strict. It fails loudly if the benchmark matrix is incomplete, which helps prevent accidental use of partial results in the manuscript.
+
+Build the manuscript locally if a LaTeX toolchain is installed:
+
+```bash
+python -m app.paper_tools.latex
+```
+
 ## What This Folder Contains
 
-- `outline.md`:
+- `configs/`
+  frozen experiment matrices for the main comparison and the two quick ablations
+- `outline.md`
   paper structure, section goals, and draft abstract
-- `experiment_plan.md`:
+- `experiment_plan.md`
   exact experiment matrix, evaluation metrics, and run protocol
-- `results_template.md`:
+- `results_template.md`
   tables and figure placeholders for the first draft
+- `arxiv_checklist.md`
+  submission-readiness notes for authorship, licensing, and disclosure
+- `latex/`
+  the first complete LaTeX manuscript scaffold
+- `results/`
+  generated CSV summaries, markdown tables, and paper figures
 
 ## Current Boundaries
 

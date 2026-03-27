@@ -195,10 +195,15 @@ What is already solid:
 What is still planned:
 
 - richer benchmark comparison pages
-- stronger experiment orchestration
-- more rigorous multi-seed evaluation
-- paper-quality result tables and figures
 - a stronger research protocol for arXiv-style publication
+
+What is already in place for the paper sprint:
+
+- frozen paper experiment configs for the main comparison and two ablations
+- a reproducible runner for `GA`, `NEAT`, and `numpy_ppo_lite`
+- CSV and markdown aggregation outputs under `paper/results/`
+- static matplotlib figure generation for paper-ready plots
+- a first LaTeX manuscript scaffold under `paper/latex/`
 
 ## Development Checks
 
@@ -228,6 +233,21 @@ When a run exports replay data, EvoDrive Lab can also generate:
 - a completed-lap GIF
 
 These artifacts are written into `reports/` and can be reused in the README, release notes, social posts, or future paper drafts.
+
+## Paper Workflow
+
+EvoDrive Lab now includes a paper workspace under `paper/` for running the benchmark matrix, aggregating results, generating figures, and drafting the manuscript.
+
+Core commands:
+
+```bash
+make paper-queue-full
+docker compose exec api python -m app.paper_tools.report aggregate-all
+docker compose exec api python -m app.paper_tools.plots build-all
+python -m app.paper_tools.latex
+```
+
+The current paper framing is intentionally modest: a small procedural 2D driving benchmark that compares `GA`, `NEAT`, and a lightweight PPO-style baseline on unseen tracks.
 
 ## Contributing
 

@@ -19,3 +19,14 @@ runs/*
 !runs/.gitkeep
 reports/*
 !reports/.gitkeep
+paper/results/*
+!paper/results/.gitkeep
+!paper/results/figures/
+paper/results/figures/*
+!paper/results/figures/.gitkeep
+paper/latex/*.aux
+paper/latex/*.bbl
+paper/latex/*.blg
+paper/latex/*.log
+paper/latex/*.out
+paper/latex/*.pdf

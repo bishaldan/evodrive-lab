@@ -1,0 +1,31 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{float}
+
+\title{EvoDrive Lab: A Procedural 2D Driving Benchmark for Comparing Neuroevolution and Lightweight Policy Optimization}
+\author{Bishal Mahatchhetri}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+EvoDrive Lab is a Docker-first benchmark for studying learning and generalization in procedural 2D driving tasks. The system combines deterministic track generation, a shared observation and action interface, and unified evaluation metrics with three training approaches: a custom genetic algorithm, NEAT, and a lightweight PPO-style baseline implemented directly in the repository. The central question is whether methods that achieve strong behavior on training tracks generalize equally well to unseen procedural tracks. We frame EvoDrive Lab as a small-scale benchmark and open-source research artifact rather than a state-of-the-art autonomous driving system, and we focus on completion, reward, crash rate, and episode length as the main comparison metrics.
+\end{abstract}
+
+\input{sections/introduction}
+\input{sections/benchmark_setup}
+\input{sections/methods}
+\input{sections/experiments}
+\input{sections/results}
+\input{sections/limitations}
+\input{sections/conclusion}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

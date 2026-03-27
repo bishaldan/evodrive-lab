@@ -1,0 +1,7 @@
+\section{Introduction}
+
+Research code for driving agents often falls into one of two extremes: visually compelling demos with weak experimental structure, or benchmark-oriented systems that are difficult to run, inspect, and extend. EvoDrive Lab is intended to sit between those extremes. It is a lightweight, Docker-first benchmark where multiple agents can be trained, replayed, and compared on procedurally generated 2D tracks.
+
+The central question of this paper is whether different training methods generalize similarly to unseen procedural tracks. A method can appear effective during training yet still degrade on held-out environments. EvoDrive Lab makes that gap visible and measurable by pairing shared evaluation suites with replay-oriented qualitative analysis.
+
+This paper does not claim state-of-the-art autonomous driving performance. Instead, it contributes a compact, reproducible benchmark and an empirical comparison of a custom genetic algorithm, NEAT, and a lightweight PPO-style baseline.

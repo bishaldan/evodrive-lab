@@ -1,0 +1,51 @@
+{
+  "family": "ablation-tracks",
+  "algorithms": ["ga", "neat", "ppo"],
+  "seeds": [7, 11, 23, 42, 101],
+  "conditions": [
+    {
+      "label": "track-standard",
+      "env": {
+        "physics": {
+          "max_track_segments": 28,
+          "segment_length": 6.0,
+          "track_width": 6.0
+        }
+      },
+      "algorithm_params": {}
+    },
+    {
+      "label": "track-long",
+      "env": {
+        "physics": {
+          "max_track_segments": 40,
+          "segment_length": 6.5,
+          "track_width": 6.2
+        }
+      },
+      "algorithm_params": {}
+    }
+  ],
+  "env": {},
+  "per_algorithm": {
+    "ga": {
+      "total_iterations": 12,
+      "checkpoint_every": 4,
+      "algorithm_params": {
+        "live_display_count": 8
+      }
+    },
+    "neat": {
+      "total_iterations": 12,
+      "checkpoint_every": 4,
+      "algorithm_params": {}
+    },
+    "ppo": {
+      "total_iterations": 8,
+      "checkpoint_every": 2,
+      "algorithm_params": {
+        "total_timesteps": 8192
+      }
+    }
+  }
+}

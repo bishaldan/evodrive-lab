@@ -40,6 +40,10 @@ dev = [
 [project.scripts]
 evodrive-api = "app.api.main:run"
 evodrive-worker = "app.worker.main:main"
+evodrive-paper-runner = "app.paper_tools.runner:main"
+evodrive-paper-report = "app.paper_tools.report:main"
+evodrive-paper-plots = "app.paper_tools.plots:main"
+evodrive-paper-latex = "app.paper_tools.latex:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

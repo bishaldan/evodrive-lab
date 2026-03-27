@@ -1,0 +1,34 @@
+{
+  "family": "main",
+  "algorithms": ["ga", "neat", "ppo"],
+  "seeds": [7, 11, 23, 42, 101],
+  "conditions": [
+    {
+      "label": "base",
+      "env": {},
+      "algorithm_params": {}
+    }
+  ],
+  "env": {},
+  "per_algorithm": {
+    "ga": {
+      "total_iterations": 12,
+      "checkpoint_every": 4,
+      "algorithm_params": {
+        "live_display_count": 8
+      }
+    },
+    "neat": {
+      "total_iterations": 12,
+      "checkpoint_every": 4,
+      "algorithm_params": {}
+    },
+    "ppo": {
+      "total_iterations": 8,
+      "checkpoint_every": 2,
+      "algorithm_params": {
+        "total_timesteps": 8192
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+\section{Experimental Protocol}
+
+The main benchmark compares GA, NEAT, and the PPO-style baseline across fixed random seeds. The benchmark uses deterministic train, validation, and test suites defined in code. The paper also includes two small ablations chosen for high value relative to implementation time: sensor count and track length.
+
+The sensor-count ablation compares five-ray and seven-ray observation settings. The track-length ablation compares a standard track profile with a longer track profile. These ablations were selected because they are already close to existing simulator controls and can be reproduced without introducing new algorithmic components.
+
+The experiment pipeline is designed to regenerate runs, aggregate summaries, paper-ready figures, and markdown/LaTeX-ready tables from code rather than hand-edited spreadsheets.
