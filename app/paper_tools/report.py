@@ -67,11 +67,47 @@ def _first_artifact_path(artifacts: list[dict[str, Any]], artifact_type: str) ->
     return None
 
 
+def _status_rank(status: str) -> int:
+    ranking = {
+        "completed": 4,
+        "running": 3,
+        "queued": 2,
+        "failed": 1,
+    }
+    return ranking.get(status, 0)
+
+
+def _canonical_sort_key(run: Any) -> tuple[int, str, str, str]:
+    status = str(run.status.value if hasattr(run.status, "value") else run.status)
+    finished_at = run.finished_at or ""
+    started_at = run.started_at or ""
+    created_at = run.created_at or ""
+    return (_status_rank(status), finished_at, started_at, created_at)
+
+
+def _select_canonical_runs(all_runs: list[Any]) -> tuple[list[Any], dict[str, int]]:
+    grouped: dict[str, list[Any]] = {}
+    for run in all_runs:
+        meta = parse_run_name(run.name)
+        if meta is None:
+            continue
+        grouped.setdefault(run.name, []).append(run)
+
+    canonical_runs: list[Any] = []
+    duplicate_counts: dict[str, int] = {}
+    for name, runs in grouped.items():
+        ordered = sorted(runs, key=_canonical_sort_key, reverse=True)
+        canonical_runs.append(ordered[0])
+        duplicate_counts[name] = len(runs)
+    return canonical_runs, duplicate_counts
+
+
 def collect_paper_rows() -> tuple[pd.DataFrame, pd.DataFrame]:
     run_rows: list[dict[str, Any]] = []
     manifest_rows: list[dict[str, Any]] = []
+    canonical_runs, duplicate_counts = _select_canonical_runs(list_runs())
 
-    for run in list_runs():
+    for run in canonical_runs:
         meta = parse_run_name(run.name)
         if meta is None:
             continue
@@ -92,6 +128,7 @@ def collect_paper_rows() -> tuple[pd.DataFrame, pd.DataFrame]:
             "condition": meta["condition"],
             "status": run.status,
             "error_message": run.error_message,
+            "duplicate_count": duplicate_counts.get(run.name, 1),
             "duration_seconds": duration,
             "train_reward": train_metrics["reward"] if train_metrics else None,
             "train_completion": train_metrics["completion"] if train_metrics else None,
@@ -124,6 +161,7 @@ def collect_paper_rows() -> tuple[pd.DataFrame, pd.DataFrame]:
                 "condition": meta["condition"],
                 "status": run.status,
                 "error_message": run.error_message or "",
+                "duplicate_count": duplicate_counts.get(run.name, 1),
             }
         )
 
@@ -181,6 +219,15 @@ def build_status_summary(manifest_df: pd.DataFrame) -> tuple[str, list[str]]:
             )
         if failed:
             warnings.append(f"{family_labels[family]} includes {failed} failed run(s).")
+
+    if "duplicate_count" in manifest_df.columns:
+        duplicate_rows = manifest_df[manifest_df["duplicate_count"] > 1]
+    else:
+        duplicate_rows = manifest_df.iloc[0:0]
+    if not duplicate_rows.empty:
+        warnings.append(
+            f"Duplicate run names were detected for {len(duplicate_rows)} canonical run(s); reporting uses the most advanced record per name."
+        )
 
     if warnings:
         lines.append("")

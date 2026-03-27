@@ -50,6 +50,7 @@ docker compose up -d --build
 Queue the canonical paper matrices:
 
 ```bash
+make paper-status
 make paper-queue-main
 make paper-queue-sensors
 make paper-queue-tracks
@@ -58,6 +59,7 @@ make paper-queue-tracks
 Or queue everything at once:
 
 ```bash
+make paper-status
 make paper-queue-full
 ```
 

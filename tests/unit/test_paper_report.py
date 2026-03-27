@@ -1,6 +1,13 @@
+from types import SimpleNamespace
+
 import pandas as pd
 
-from app.paper_tools.report import build_status_summary, select_qualitative_cases, summarize_runs
+from app.paper_tools.report import (
+    _select_canonical_runs,
+    build_status_summary,
+    select_qualitative_cases,
+    summarize_runs,
+)
 
 
 def test_summarize_runs_groups_by_algorithm() -> None:
@@ -77,3 +84,33 @@ def test_build_status_summary_reports_incomplete_matrices() -> None:
     assert "Main comparison" in text
     assert warnings
     assert any("incomplete" in warning for warning in warnings)
+
+
+def test_select_canonical_runs_prefers_completed_record() -> None:
+    runs = [
+        SimpleNamespace(
+            name="paper-main-ga-seed007-base",
+            status="running",
+            created_at="2026-03-27T04:00:00",
+            started_at="2026-03-27T04:00:01",
+            finished_at=None,
+        ),
+        SimpleNamespace(
+            name="paper-main-ga-seed007-base",
+            status="completed",
+            created_at="2026-03-27T04:02:00",
+            started_at="2026-03-27T04:02:01",
+            finished_at="2026-03-27T04:05:00",
+        ),
+        SimpleNamespace(
+            name="paper-main-neat-seed007-base",
+            status="queued",
+            created_at="2026-03-27T04:03:00",
+            started_at=None,
+            finished_at=None,
+        ),
+    ]
+    canonical, duplicates = _select_canonical_runs(runs)
+    canonical_names = {run.name: run.status for run in canonical}
+    assert canonical_names["paper-main-ga-seed007-base"] == "completed"
+    assert duplicates["paper-main-ga-seed007-base"] == 2

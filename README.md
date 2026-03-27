@@ -133,6 +133,7 @@ make train-neat
 make train-ppo
 make benchmark
 make demo-ga
+make paper-status
 ```
 
 ## Architecture
@@ -241,6 +242,7 @@ EvoDrive Lab now includes a paper workspace under `paper/` for running the bench
 Core commands:
 
 ```bash
+make paper-status
 make paper-queue-full
 docker compose exec api python -m app.paper_tools.report aggregate-all
 docker compose exec api python -m app.paper_tools.plots build-all
