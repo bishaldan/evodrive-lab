@@ -1,6 +1,6 @@
 DC = docker compose
 
-.PHONY: up down restart build test lint typecheck smoke train-ga train-neat train-ppo benchmark demo-ga paper-queue-main paper-queue-sensors paper-queue-tracks paper-queue-full paper-aggregate-main paper-aggregate-sensors paper-aggregate-tracks paper-export-tables paper-plots paper-latex
+.PHONY: up down restart build test lint typecheck smoke train-ga train-neat train-ppo benchmark demo-ga paper-queue-main paper-queue-sensors paper-queue-tracks paper-queue-full paper-aggregate-main paper-aggregate-sensors paper-aggregate-tracks paper-export-tables paper-plots paper-latex paper-status
 
 up:
 	$(DC) up --build
@@ -71,3 +71,7 @@ paper-plots:
 
 paper-latex:
 	python -m app.paper_tools.latex
+
+paper-status:
+	$(DC) exec api python -m app.paper_tools.report aggregate-all
+	$(DC) exec api sh -lc "cat /workspace/paper/results/paper_status.md"
