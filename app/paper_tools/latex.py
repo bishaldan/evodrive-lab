@@ -12,6 +12,9 @@ def _build_command() -> list[str] | None:
     latexmk = shutil.which("latexmk")
     if latexmk:
         return [latexmk, "-pdf", "-interaction=nonstopmode", "main.tex"]
+    tectonic = shutil.which("tectonic")
+    if tectonic:
+        return [tectonic, "main.tex"]
     pdflatex = shutil.which("pdflatex")
     if pdflatex:
         return [pdflatex, "-interaction=nonstopmode", "main.tex"]
