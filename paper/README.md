@@ -30,8 +30,9 @@ It should not claim state-of-the-art performance.
 ## Candidate Titles
 
 1. `EvoDrive Lab: A Procedural 2D Driving Benchmark for Comparing Neuroevolution and Lightweight Policy Optimization`
-2. `Generalization on Procedural 2D Driving Tracks: A Comparative Study of GA, NEAT, and PPO-Style Training`
-3. `Learning to Drive on Unseen Procedural Tracks: A Small-Scale Benchmark with Evolutionary and Policy-Based Methods`
+2. `EvoDrive Lab: A Reproducible Procedural 2D Driving Benchmark for Neuroevolution and Lightweight Policy Optimization`
+3. `Generalization on Procedural 2D Driving Tracks: A Comparative Study of GA, NEAT, and PPO-Style Training`
+4. `Learning to Drive on Unseen Procedural Tracks: A Small-Scale Benchmark with Evolutionary and Policy-Based Methods`
 
 ## Current Thesis
 
