@@ -1,6 +1,6 @@
 DC = docker compose
 
-.PHONY: up down restart build test lint typecheck smoke train-ga train-neat train-ppo benchmark demo-ga paper-queue-main paper-queue-sensors paper-queue-tracks paper-queue-full paper-aggregate-main paper-aggregate-sensors paper-aggregate-tracks paper-export-tables paper-plots paper-latex paper-status
+.PHONY: up down restart build test lint typecheck smoke train-ga train-neat train-ppo benchmark demo-ga paper-queue-main paper-queue-sensors paper-queue-tracks paper-queue-full paper-queue-ppo-rerun paper-aggregate-main paper-aggregate-sensors paper-aggregate-tracks paper-export-tables paper-plots paper-latex paper-status
 
 up:
 	$(DC) up --build
@@ -53,6 +53,9 @@ paper-queue-tracks:
 
 paper-queue-full:
 	$(DC) exec api python -m app.paper_tools.runner queue-full
+
+paper-queue-ppo-rerun:
+	$(DC) exec api python -m app.paper_tools.runner queue-full --algorithms ppo --name-prefix rerun-ppo
 
 paper-aggregate-main:
 	$(DC) exec api python -m app.paper_tools.report aggregate-main

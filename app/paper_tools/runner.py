@@ -55,23 +55,42 @@ def load_matrix_configs(kind: str) -> list[dict[str, Any]]:
     return [load_json(CONFIG_MAP[kind])]
 
 
-def build_run_matrix(kind: str) -> list[RunConfig]:
+def build_run_matrix(
+    kind: str,
+    *,
+    algorithms: set[str] | None = None,
+    name_prefix: str | None = None,
+) -> list[RunConfig]:
     configs = load_matrix_configs(kind)
     matrix: list[RunConfig] = []
     for spec in configs:
         family = spec["family"]
-        algorithms = spec["algorithms"]
+        enabled_algorithms = [
+            algorithm
+            for algorithm in spec["algorithms"]
+            if algorithms is None or algorithm in algorithms
+        ]
         seeds = spec["seeds"]
         conditions = spec["conditions"]
-        for algorithm in algorithms:
+        for algorithm in enabled_algorithms:
             for seed in seeds:
                 for condition in conditions:
-                    matrix.append(_build_run_config(family, algorithm, seed, condition, spec))
+                    config = _build_run_config(family, algorithm, seed, condition, spec)
+                    if name_prefix:
+                        config.name = f"{name_prefix}-{config.name}"
+                    matrix.append(config)
     return matrix
 
 
-def queue_matrix(kind: str, *, execute_sync: bool = False, allow_duplicates: bool = False) -> dict[str, Any]:
-    run_matrix = build_run_matrix(kind)
+def queue_matrix(
+    kind: str,
+    *,
+    execute_sync: bool = False,
+    allow_duplicates: bool = False,
+    algorithms: set[str] | None = None,
+    name_prefix: str | None = None,
+) -> dict[str, Any]:
+    run_matrix = build_run_matrix(kind, algorithms=algorithms, name_prefix=name_prefix)
     existing_names = {run.name for run in list_runs()}
     created: list[str] = []
     skipped: list[str] = []
@@ -91,9 +110,26 @@ def queue_matrix(kind: str, *, execute_sync: bool = False, allow_duplicates: boo
         "requested": len(run_matrix),
         "created": len(created),
         "skipped": len(skipped),
+        "algorithms": sorted(algorithms) if algorithms else "all",
+        "name_prefix": name_prefix,
         "created_names": created,
         "skipped_names": skipped,
     }
+
+
+def _add_common_filters(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--sync", action="store_true")
+    parser.add_argument("--allow-duplicates", action="store_true")
+    parser.add_argument(
+        "--algorithms",
+        nargs="+",
+        choices=["ga", "neat", "ppo"],
+        help="Limit the queued matrix to specific algorithms.",
+    )
+    parser.add_argument(
+        "--name-prefix",
+        help="Prefix queued run names so reruns stay separate from the canonical paper matrix.",
+    )
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -101,30 +137,46 @@ def _build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     queue_main = subparsers.add_parser("queue-main")
-    queue_main.add_argument("--sync", action="store_true")
-    queue_main.add_argument("--allow-duplicates", action="store_true")
+    _add_common_filters(queue_main)
 
     queue_ablation = subparsers.add_parser("queue-ablation")
     queue_ablation.add_argument("--family", choices=["sensors", "tracks"], required=True)
-    queue_ablation.add_argument("--sync", action="store_true")
-    queue_ablation.add_argument("--allow-duplicates", action="store_true")
+    _add_common_filters(queue_ablation)
 
     queue_full = subparsers.add_parser("queue-full")
-    queue_full.add_argument("--sync", action="store_true")
-    queue_full.add_argument("--allow-duplicates", action="store_true")
+    _add_common_filters(queue_full)
     return parser
 
 
 def main() -> None:
     parser = _build_parser()
     args = parser.parse_args()
+    selected_algorithms = set(args.algorithms) if getattr(args, "algorithms", None) else None
 
     if args.command == "queue-main":
-        result = queue_matrix("main", execute_sync=args.sync, allow_duplicates=args.allow_duplicates)
+        result = queue_matrix(
+            "main",
+            execute_sync=args.sync,
+            allow_duplicates=args.allow_duplicates,
+            algorithms=selected_algorithms,
+            name_prefix=args.name_prefix,
+        )
     elif args.command == "queue-ablation":
-        result = queue_matrix(args.family, execute_sync=args.sync, allow_duplicates=args.allow_duplicates)
+        result = queue_matrix(
+            args.family,
+            execute_sync=args.sync,
+            allow_duplicates=args.allow_duplicates,
+            algorithms=selected_algorithms,
+            name_prefix=args.name_prefix,
+        )
     else:
-        result = queue_matrix("full", execute_sync=args.sync, allow_duplicates=args.allow_duplicates)
+        result = queue_matrix(
+            "full",
+            execute_sync=args.sync,
+            allow_duplicates=args.allow_duplicates,
+            algorithms=selected_algorithms,
+            name_prefix=args.name_prefix,
+        )
 
     print(result)
 
