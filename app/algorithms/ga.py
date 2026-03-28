@@ -10,7 +10,7 @@ from app.algorithms.base import AlgorithmResult, MetricCallback
 from app.benchmark.evaluate import evaluate_policy
 from app.benchmark.suites import get_track_suite
 from app.config.defaults import with_algorithm_defaults
-from app.config.models import MetricPoint, RunConfig
+from app.config.models import MetricPoint, RunConfig, RunMode
 from app.policies.network import FeedForwardPolicy, mlp_parameter_count
 from app.simulator.environment import DrivingEnv
 
@@ -173,6 +173,7 @@ def run_ga(config: RunConfig, run_dir: Path, metric_callback: MetricCallback) ->
     best_score = float("-inf")
     start = time.time()
     live_snapshot_path: Path | None = None
+    write_live_snapshots = str(config.mode) != RunMode.BENCHMARK.value
 
     for generation in range(config.total_iterations):
         scored_population: list[tuple[float, np.ndarray, dict[str, float | str]]] = []
@@ -197,15 +198,16 @@ def run_ga(config: RunConfig, run_dir: Path, metric_callback: MetricCallback) ->
                 extras={"score": generation_score},
             )
         )
-        live_snapshot_path = _write_live_population_snapshot(
-            run_dir,
-            generation,
-            config.env,
-            train_seeds[0],
-            layer_sizes,
-            scored_population,
-            live_display_count,
-        )
+        if write_live_snapshots:
+            live_snapshot_path = _write_live_population_snapshot(
+                run_dir,
+                generation,
+                config.env,
+                train_seeds[0],
+                layer_sizes,
+                scored_population,
+                live_display_count,
+            )
         elites = [entry[1] for entry in scored_population[:elite_count]]
         new_population = elites.copy()
         while len(new_population) < population_size:

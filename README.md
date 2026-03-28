@@ -183,7 +183,7 @@ This repo is a good fit if you want:
 
 ## Project Status
 
-This is a strong public MVP, not a finished research benchmark.
+This is now a strong public benchmark/demo with a completed paper experiment matrix.
 
 What is already solid:
 
@@ -193,11 +193,6 @@ What is already solid:
 - media export is working
 - the project is good enough to publish and demo publicly
 
-What is still planned:
-
-- richer benchmark comparison pages
-- a stronger research protocol for arXiv-style publication
-
 What is already in place for the paper sprint:
 
 - frozen paper experiment configs for the main comparison and two ablations
@@ -205,6 +200,13 @@ What is already in place for the paper sprint:
 - CSV and markdown aggregation outputs under `paper/results/`
 - static matplotlib figure generation for paper-ready plots
 - a first LaTeX manuscript scaffold under `paper/latex/`
+
+What is now complete:
+
+- main comparison benchmark
+- sensor-count ablation
+- track-length ablation
+- paper summary CSVs and figure exports
 
 ## Development Checks
 
@@ -250,6 +252,14 @@ python -m app.paper_tools.latex
 ```
 
 The current paper framing is intentionally modest: a small procedural 2D driving benchmark that compares `GA`, `NEAT`, and a lightweight PPO-style baseline on unseen tracks.
+
+Final paper-supporting outputs live in:
+
+- `paper/results/paper_main_summary.csv`
+- `paper/results/paper_ablation_sensors_summary.csv`
+- `paper/results/paper_ablation_tracks_summary.csv`
+- `paper/results/paper_qualitative_cases.csv`
+- `paper/results/figures/`
 
 ## Contributing
 
