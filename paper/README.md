@@ -94,6 +94,8 @@ Build the manuscript locally if a LaTeX toolchain is installed:
 python -m app.paper_tools.latex
 ```
 
+The build helper now tries local TeX tools first and can fall back to a Dockerized TeX Live build if Docker is available. On a fresh machine, that Docker fallback may take longer the first time because the TeX image needs to be pulled locally.
+
 ## What This Folder Contains
 
 - `configs/`
