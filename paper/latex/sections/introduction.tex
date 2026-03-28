@@ -1,7 +1,14 @@
 \section{Introduction}
 
-Research code for driving agents often falls into one of two extremes: visually compelling demos with weak experimental structure, or benchmark-oriented systems that are difficult to run, inspect, and extend. EvoDrive Lab is intended to sit between those extremes. It is a lightweight, Docker-first benchmark where multiple agents can be trained, replayed, and compared on procedurally generated 2D tracks.
+Research code for driving agents often falls into one of two extremes: visually compelling demos with weak experimental structure, or benchmark-oriented systems that are difficult to run, inspect, and extend. Large platforms such as CARLA and MetaDrive have been influential for realism and scale, while procedural reinforcement-learning benchmarks such as Procgen and CoinRun have helped foreground generalization as a first-class evaluation target \cite{carla2017, metadrive2021, procgen2019, coinrun2018}. EvoDrive Lab is intended to occupy a different point in that design space: a lightweight, Docker-first benchmark where multiple agents can be trained, replayed, and compared on procedurally generated 2D tracks without large infrastructure overhead.
 
-The central question of this paper is whether different training methods generalize similarly to unseen procedural tracks. A method can appear effective during training yet still degrade on held-out environments. EvoDrive Lab makes that gap visible and measurable by pairing shared evaluation suites with replay-oriented qualitative analysis.
+The central question of this paper is whether different training methods generalize similarly to unseen procedural tracks. A method can appear effective during optimization yet still degrade on held-out environments. EvoDrive Lab makes that gap visible and measurable by pairing shared train, validation, and test suites with replay-oriented qualitative analysis. The benchmark is small enough to run on commodity hardware, but structured enough to support repeatable comparisons and paper-ready reporting.
 
-This paper does not claim state-of-the-art autonomous driving performance. Instead, it contributes a compact, reproducible benchmark and an empirical comparison of a custom genetic algorithm, NEAT, and a lightweight PPO-style baseline.
+This paper does not claim state-of-the-art autonomous driving performance. Instead, it contributes a compact, reproducible benchmark and an empirical comparison of a custom genetic algorithm, NEAT \cite{stanley2002}, and a lightweight PPO-style baseline inspired by proximal policy optimization \cite{schulman2017}. The emphasis is on comparative behavior inside one controlled benchmark rather than broad conclusions about autonomous driving.
+
+More concretely, the paper makes three contributions:
+\begin{itemize}[leftmargin=1.5em]
+    \item a small procedural 2D driving benchmark that links quantitative evaluation with qualitative replay artifacts;
+    \item a reproducible comparison of neuroevolution and lightweight policy optimization under a shared train/validation/test protocol;
+    \item two compact ablations that test how sensor richness and track length affect generalization.
+\end{itemize}

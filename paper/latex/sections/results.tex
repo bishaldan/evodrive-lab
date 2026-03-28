@@ -5,6 +5,7 @@ The paper reports validation and held-out test performance using completion, rew
 \begin{table}[H]
     \centering
     \caption{Main benchmark comparison on held-out test tracks.}
+    \label{tab:main-results}
     \begin{tabular}{lrrrr}
         \toprule
         Method & Test completion & Test reward & Crash rate & Val.-test gap \\
@@ -16,40 +17,47 @@ The paper reports validation and held-out test performance using completion, rew
     \end{tabular}
 \end{table}
 
-Table 1 shows the main pattern of the benchmark. NEAT achieved the strongest held-out completion score, but only by a small margin over the custom genetic algorithm. The GA was notable because its mean test completion slightly exceeded its mean validation completion, suggesting that its learned behavior transferred well to the held-out seeds in this benchmark. NEAT, by contrast, showed almost no validation-to-test gap, indicating stable performance between the two suites. The lightweight PPO baseline did not learn a competitive driving policy under the current benchmark budget.
+Table~\ref{tab:main-results} shows the main pattern of the benchmark. NEAT achieved the strongest held-out completion score, but only by a small margin over the custom genetic algorithm. The GA was notable because its mean test completion slightly exceeded its mean validation completion, suggesting that its learned behavior transferred well to the held-out seeds in this benchmark. NEAT, by contrast, showed almost no validation-to-test gap, indicating stable performance between the two suites. The lightweight PPO baseline did not learn a competitive driving policy under the current benchmark budget.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.82\linewidth]{figures/main_validation_vs_test_completion.png}
     \caption{Validation versus test completion in the main benchmark.}
+    \label{fig:main-completion}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.82\linewidth]{figures/main_test_reward.png}
     \caption{Held-out test reward by algorithm.}
+    \label{fig:main-reward}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.82\linewidth]{figures/main_test_crash_rate.png}
     \caption{Held-out crash rate by algorithm.}
+    \label{fig:main-crash}
 \end{figure}
 
-The sensor ablation produced a method-dependent result. Increasing the observation count from five rays to seven improved GA held-out completion from 0.866 to 0.879 and improved PPO from 0.002 to 0.017, but NEAT declined slightly from 0.877 to 0.873. The most plausible interpretation is that additional sensing helped direct parameter evolution more than topology evolution in this compact task, while the PPO baseline still lacked enough optimization strength to capitalize on the richer observation space.
+Figures~\ref{fig:main-completion}--\ref{fig:main-crash} reinforce the same ranking from a few complementary views. Completion shows NEAT and GA clustered near one another and far ahead of PPO. Reward tells a similar story, although the reward ordering is less intuitive because the metric also reflects shaped penalties. Crash rate is especially revealing: NEAT achieved zero held-out crashes on average, GA remained low, and PPO crashed nearly half the time even though it often failed earlier through weak progress rather than outright course completion.
+
+The sensor ablation produced a method-dependent result. Increasing the observation count from five rays to seven improved GA held-out completion from 0.866 to 0.879 and improved PPO from 0.002 to 0.017, but NEAT declined slightly from 0.877 to 0.873. The most plausible interpretation is that additional sensing helped direct parameter evolution more than topology evolution in this compact task, while the PPO baseline still lacked enough optimization strength to capitalize consistently on the richer observation space.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.82\linewidth]{figures/ablation_sensor_completion.png}
     \caption{Held-out completion under the sensor-count ablation.}
+    \label{fig:sensor-ablation}
 \end{figure}
 
-The track-length ablation was more severe. Moving from the standard track profile to the longer profile reduced held-out completion for GA from 0.866 to 0.470 and for NEAT from 0.879 to 0.562. PPO remained near failure in both cases, though its completion increased slightly on the long-track condition from 0.002 to 0.007. This indicates that longer procedural tracks create a substantially harder generalization problem even for the stronger evolutionary methods.
+The track-length ablation was more severe. Moving from the standard track profile to the longer profile reduced held-out completion for GA from 0.866 to 0.470 and for NEAT from 0.879 to 0.562. PPO remained near failure in both cases, though its completion increased slightly on the long-track condition from 0.002 to 0.007. This indicates that longer procedural tracks create a substantially harder generalization problem even for the stronger evolutionary methods and that benchmark geometry is a meaningful difficulty lever rather than a cosmetic variation.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.82\linewidth]{figures/ablation_track_completion.png}
     \caption{Held-out completion under the track-length ablation.}
+    \label{fig:track-ablation}
 \end{figure}
 
-The qualitative replay set reinforces the quantitative picture. For GA and NEAT, the median and best runs are visually close because both methods usually recover stable centerline-following behavior once training succeeds. PPO, on the other hand, never produced a qualitatively strong run in the selected cases: even its best replay showed negligible completion and poor reward. This difference is important because it shows that the failure of PPO in the current benchmark is not merely a statistical artifact of one metric, but also visible in the replay behavior itself.
+Figures~\ref{fig:sensor-ablation} and \ref{fig:track-ablation} summarize the ablations visually, but the replay artifacts add an important qualitative check. For GA and NEAT, the median and best runs are visually close because both methods usually recover stable centerline-following behavior once training succeeds. PPO, on the other hand, never produced a qualitatively strong run in the selected cases: even its best replay showed negligible completion and poor reward. This difference matters because it shows that the failure of PPO in the current benchmark is not merely a statistical artifact of one metric, but also visible in the replay behavior itself.

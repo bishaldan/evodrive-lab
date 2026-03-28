@@ -1,10 +1,10 @@
 \section{Experimental Protocol}
 
-The main benchmark compares GA, NEAT, and the PPO-style baseline across five fixed random seeds: 7, 11, 23, 42, and 101. The benchmark uses deterministic train, validation, and test suites defined in code. For the main comparison, each method is trained under the frozen configuration committed in the repository and evaluated with the same reporting pipeline.
+The main benchmark compares GA, NEAT, and the PPO-style baseline across five fixed random seeds: 7, 11, 23, 42, and 101. The benchmark uses deterministic train, validation, and test suites defined in code. For the main comparison, each method is trained under the frozen configuration committed in the repository and evaluated with the same reporting pipeline. In the main protocol, GA and NEAT each run for 12 iterations per seed, while the lightweight PPO baseline runs for 8 outer iterations with 8192 total timesteps.
 
-The paper includes two compact ablations chosen for high value relative to implementation time. The sensor-count ablation compares five-ray and seven-ray observation settings. The track-length ablation compares a standard track profile with a longer profile defined by a higher segment count, slightly longer segment length, and slightly wider track geometry. These ablations were selected because they are already close to existing simulator controls and can be reproduced without introducing new algorithmic components.
+The paper includes two compact ablations chosen for high value relative to implementation time. The sensor-count ablation compares five-ray and seven-ray observation settings. The track-length ablation compares a standard track profile with a longer profile defined by a higher segment count, slightly longer segment length, and slightly wider track geometry. These ablations were selected because they are already close to existing simulator controls and can be reproduced without introducing new algorithmic components or changing the overall learning problem.
 
-Each experiment family is aggregated across seeds into mean and standard-deviation summaries. The main paper tables and figures are generated directly from those outputs rather than from hand-edited spreadsheets. This design is intended to keep the reported numbers reproducible from the public repository state.
+Each experiment family is aggregated across seeds into mean and standard-deviation summaries. The main paper tables and figures are generated directly from those outputs rather than from hand-edited spreadsheets. This design is intended to keep the reported numbers reproducible from the public repository state and to reduce the risk of transcription mistakes between code, plots, and manuscript tables.
 
 The quantitative comparison focuses on four reported metrics:
 \begin{itemize}[leftmargin=1.5em]
@@ -14,4 +14,4 @@ The quantitative comparison focuses on four reported metrics:
     \item mean episode length.
 \end{itemize}
 
-The analysis also uses validation-to-test generalization gaps as a compact way to describe whether a method that performs well on optimization-adjacent tracks maintains similar behavior on held-out procedural tracks.
+The analysis also uses validation-to-test generalization gaps as a compact way to describe whether a method that performs well on optimization-adjacent tracks maintains similar behavior on held-out procedural tracks. Negative gaps are possible in this setting because held-out tracks are sampled procedurally rather than ordered by explicit difficulty; a small negative gap therefore indicates that the held-out suite was not uniformly harder for that method.
