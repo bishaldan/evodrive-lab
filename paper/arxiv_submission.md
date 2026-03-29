@@ -6,7 +6,7 @@ EvoDrive Lab: A Reproducible Procedural 2D Driving Benchmark for Neuroevolution 
 
 ## Recommended Author
 
-Bishal Mahatchhetri
+Bishal Chhetri
 
 ## Recommended Primary Category
 
