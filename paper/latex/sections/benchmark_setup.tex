@@ -1,13 +1,17 @@
+\myneedspace{10\baselineskip}
 \section{Benchmark Setup}
 
+\myneedspace{6\baselineskip}
 \subsection{Task and Procedural Track Generation}
 
 EvoDrive Lab uses procedurally generated top-down driving tracks parameterized by a track seed and a small number of geometry controls. Each episode is defined by a centerline, left and right walls, a start gate, a finish gate, and intermediate checkpoint gates. The benchmark is designed to remain lightweight enough for laptop-scale experimentation while still exposing a meaningful train-versus-test generalization problem.
 
+\myneedspace{6\baselineskip}
 \subsection{Observations and Actions}
 
 Each car observes the environment through forward-facing ray sensors and a small set of motion-state features. The default setting uses five rays in the main comparison, and the sensor ablation increases this to seven rays. Policies output continuous steering and throttle actions. Episodes terminate on crash or timeout.
 
+\myneedspace{6\baselineskip}
 \subsection{Evaluation Splits and Metrics}
 
 The current benchmark uses fixed train, validation, and test suites, allowing the same policies to be evaluated both on optimization-adjacent tracks and on unseen held-out tracks.

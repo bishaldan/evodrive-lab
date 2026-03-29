@@ -6,6 +6,24 @@
 \usepackage{enumitem}
 \usepackage{float}
 
+\raggedbottom
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+\makeatletter
+\newcommand{\myneedspace}[1]{%
+  \ifhmode\par\fi
+  \begingroup
+  \dimen@=#1\relax
+  \dimen@ii=\pagegoal
+  \advance\dimen@ii-\pagetotal
+  \ifdim\dimen@>\dimen@ii
+    \newpage
+  \fi
+  \endgroup
+}
+\makeatother
+
 \title{EvoDrive Lab: A Reproducible Procedural 2D Driving Benchmark for Neuroevolution and Lightweight Policy Optimization}
 \author{Bishal Chhetri}
 \date{}
