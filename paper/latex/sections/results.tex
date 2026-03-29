@@ -2,6 +2,8 @@
 
 The paper reports validation and held-out test performance using completion, reward, crash rate, and mean episode length. The primary comparison focuses on whether the ranking of methods on validation tracks matches their behavior on unseen test tracks. In other words, the central question is not only which method performs best near the training distribution, but also which method degrades least when moved to held-out procedural tracks.
 
+\subsection{Main Benchmark Comparison}
+
 \begin{table}[H]
     \centering
     \caption{Main benchmark comparison on held-out test tracks.}
@@ -42,6 +44,8 @@ Table~\ref{tab:main-results} shows the main pattern of the benchmark. NEAT achie
 
 Figures~\ref{fig:main-completion}--\ref{fig:main-crash} reinforce the same ranking from a few complementary views. Completion shows NEAT and GA clustered near one another and far ahead of PPO. Reward tells a similar story, although the reward ordering is less intuitive because the metric also reflects shaped penalties. Crash rate is especially revealing: NEAT achieved zero held-out crashes on average, GA remained low, and PPO crashed nearly half the time even though it often failed earlier through weak progress rather than outright course completion.
 
+\subsection{Sensor-count Ablation}
+
 The sensor ablation produced a method-dependent result. Increasing the observation count from five rays to seven improved GA held-out completion from 0.866 to 0.879 and improved PPO from 0.002 to 0.017, but NEAT declined slightly from 0.877 to 0.873. The most plausible interpretation is that additional sensing helped direct parameter evolution more than topology evolution in this compact task, while the PPO baseline still lacked enough optimization strength to capitalize consistently on the richer observation space.
 
 \begin{figure}[H]
@@ -51,6 +55,8 @@ The sensor ablation produced a method-dependent result. Increasing the observati
     \label{fig:sensor-ablation}
 \end{figure}
 
+\subsection{Track-length Ablation}
+
 The track-length ablation was more severe. Moving from the standard track profile to the longer profile reduced held-out completion for GA from 0.866 to 0.470 and for NEAT from 0.879 to 0.562. PPO remained near failure in both cases, though its completion increased slightly on the long-track condition from 0.002 to 0.007. This indicates that longer procedural tracks create a substantially harder generalization problem even for the stronger evolutionary methods and that benchmark geometry is a meaningful difficulty lever rather than a cosmetic variation.
 
 \begin{figure}[H]
@@ -59,5 +65,7 @@ The track-length ablation was more severe. Moving from the standard track profil
     \caption{Held-out completion under the track-length ablation.}
     \label{fig:track-ablation}
 \end{figure}
+
+\subsection{Qualitative Replay Analysis}
 
 Figures~\ref{fig:sensor-ablation} and \ref{fig:track-ablation} summarize the ablations visually, but the replay artifacts add an important qualitative check. For GA and NEAT, the median and best runs are visually close because both methods usually recover stable centerline-following behavior once training succeeds. PPO, on the other hand, never produced a qualitatively strong run in the selected cases: even its best replay showed negligible completion and poor reward. This difference matters because it shows that the failure of PPO in the current benchmark is not merely a statistical artifact of one metric, but also visible in the replay behavior itself.
